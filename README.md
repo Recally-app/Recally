@@ -62,29 +62,37 @@ The technology used to develop Recally is still being decided but currently we h
    cd extension
    npm install
    ```
-   
-2. **Build the TypeScript code**
-    ```bash
-    npx tsc
-    ```
-This compiles TypeScript files from src/ into JavaScript files in dist/.
+This installs:
+- vite — modern dev bundler
+- @crxjs/vite-plugin — Chrome Extension support
+- typescript and @types/chrome — for type safety   
 
-To watch for changes and rebuild automatically:
+2. **Run in development mode**
     ```bash
-    npx tsc --watch
+    npm run dev
     ```
+
+Vite will start a local dev server
+
+The plugin builds a live-reloading extension into dist/
+Chrome reloads automatically whenever you save files
+
+⚠️ You might see a one-time “bad HTTP response code (404)” — that’s harmless and part of Vite’s hot-reload setup.
 
 3. **Load the extension in Chrome**
 - Open chrome://extensions/
 - Enable Developer mode
 - Click Load unpacked
-- Select the extension/ folder
-- The Recally icon should appear in your toolbar
+- Select the extension/dist/ folder
+- You should now see Recally in your extensions bar!
+- Click the icon to open the popup.
 
-4. **Useful Commands**
-- npm install          # Install dependencies
-- npx tsc              # Compile TypeScript
-- npx tsc --watch      # Recompile automatically on save
+4. **Build a production version**
+   ```bash
+   npm run build
+   ```
+This generates an optimized, static version of the extension inside dist/.
+You can zip this folder and upload it to the Chrome Web Store later.
 
 ## 🧹 Linting
 
