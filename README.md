@@ -107,3 +107,4 @@ npm run lint:fix
 - Enable “Auto Fix on Save” to automatically apply lint fixes while you code.
 - Run npm run lint before committing changes to ensure code consistency.
 
+
