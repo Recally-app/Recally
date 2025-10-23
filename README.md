@@ -85,3 +85,24 @@ To watch for changes and rebuild automatically:
 - npm install          # Install dependencies
 - npx tsc              # Compile TypeScript
 - npx tsc --watch      # Recompile automatically on save
+
+## 🧹 Linting
+
+Recally uses **ESLint** with the new [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new) format (`eslint.config.mts`) to maintain consistent code quality across the project.
+
+### Running the Linter
+
+Run ESLint on all source files:
+```bash
+npm run lint
+```
+
+Automatically fix simple issues:
+```bash
+npm run lint:fix
+```
+
+**Recommended Setup**
+- Use VS Code with the official ESLint extension installed.
+- Enable “Auto Fix on Save” to automatically apply lint fixes while you code.
+- Run npm run lint before committing changes to ensure code consistency.
