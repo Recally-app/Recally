@@ -39,10 +39,49 @@ recally/
 
 ## Technical Details
 ### Running the app
-
-There is nothing to run currently lol. But coming soon
+There isn't much to run currently lol. But coming soon
 
 ### Developing
-
-The technology used to develop Recally is still being decided but I expected Typescript on the frontend and React on the backend
 For more details on the roadmap, see [Highlevel roadMap](https://docs.google.com/document/d/1WsfJWlSeQEt3m74yXUaScKw1gqs6-Wdkpq4fMlcyEv8/edit?tab=t.0)
+
+
+### Current Stack
+The technology used to develop Recally is still being decided but currently we have the below
+
+- Web extension: TypeScript (compiled to ES2020)
+- Build Tool: TypeScript compiler (tsc)
+- Manifest: Chrome Manifest V3
+- Storage: chrome.storage.local
+- UI: HTML, CSS, and TypeScript
+- Runtime: Chrome or Edge extension environment
+
+### Local Development
+
+1. **Install dependencies**
+   ```bash
+   cd extension
+   npm install
+   ```
+   
+2. **Build the TypeScript code**
+    ```bash
+    npx tsc
+    ```
+This compiles TypeScript files from src/ into JavaScript files in dist/.
+
+To watch for changes and rebuild automatically:
+    ```bash
+    npx tsc --watch
+    ```
+
+3. **Load the extension in Chrome**
+- Open chrome://extensions/
+- Enable Developer mode
+- Click Load unpacked
+- Select the extension/ folder
+- The Recally icon should appear in your toolbar
+
+4. **Useful Commands**
+- npm install          # Install dependencies
+- npx tsc              # Compile TypeScript
+- npx tsc --watch      # Recompile automatically on save
