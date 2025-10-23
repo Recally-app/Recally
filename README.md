@@ -106,3 +106,4 @@ npm run lint:fix
 - Use VS Code with the official ESLint extension installed.
 - Enable “Auto Fix on Save” to automatically apply lint fixes while you code.
 - Run npm run lint before committing changes to ensure code consistency.
+
