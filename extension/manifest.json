@@ -1,6 +1,6 @@
 {
   "action": {
-    "default_popup": "src/popup/popup.html",
+    "default_popup": "dist/popup/popup.html",
     "default_icon": {
       "16": "src/assets/icon16.png",
       "48": "src/assets/icon48.png",
@@ -8,7 +8,7 @@
     }
   },
   "background": {
-    "service_worker": "src/background/background.js",
+    "service_worker": "dist/background/background.js",
     "type": "module"
   },
   "description": "Save and recall the articles and posts you read online.",
