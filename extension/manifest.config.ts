@@ -8,12 +8,24 @@ export default defineManifest({
   description: 'Save and recall the articles and posts you read online.',
 
   action: {
+    default_icon: {
+      16: 'src/assets/icon/favicon-16.png',
+      32: 'src/assets/icon/favicon-32.png',
+      48: 'src/assets/icon/favicon-48.png',
+    },
     default_popup: 'src/popup/index.html',
   },
 
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
+  },
+
+  icons: {
+    16: 'src/assets/icon/favicon-16.png',
+    32: 'src/assets/icon/favicon-32.png',
+    48: 'src/assets/icon/favicon-48.png',
+    128: 'src/assets/icon/favicon-128.png',
   },
 
   permissions: ['storage', 'tabs'],
