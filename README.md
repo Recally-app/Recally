@@ -1,3 +1,10 @@
+<p align="center">
+  <img src="https://github.com/<your-username-or-org>/Recally/raw/main/branding/logo/recally-logo-primary.png" width="120" alt="Recally logo" />
+</p>
+
+<h1 align="center">Recally</h1>
+<p align="center">Save what you read. Recall when it matters.</p>
+
 # 🧠 Recally
 
 Recally helps you **save and recall the articles, blogs, and docs you read online** — so you never lose track of what inspired you again.
