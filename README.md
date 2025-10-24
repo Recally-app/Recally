@@ -94,6 +94,9 @@ Chrome reloads automatically whenever you save files
 This generates an optimized, static version of the extension inside dist/.
 You can zip this folder and upload it to the Chrome Web Store later.
 
+5. **Working on the UI**
+
+When working on the UI, be sure to checkout branding/colors.md and fonts.md for some consistent styling
 ## 🧹 Linting
 
 Recally uses **ESLint** with the new [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new) format (`eslint.config.mts`) to maintain consistent code quality across the project.
