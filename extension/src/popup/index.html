@@ -1,16 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Recally popup</title>
-    <link rel="stylesheet" href="./popup.css" />
+  <meta charset="UTF-8" />
+  <title>Recally</title>
+  <link rel="stylesheet" href="./popup.css" />
 </head>
 <body>
-    <header class="popup-header">
-        <img src="../assets/icon/recally-logo-primary.svg" alt="Recally logo" width="128" height="128" />
-        <h1>Recally</h1>
-    </header>
-    <button id="save">Save this page</button>
-    <ul id="saved"></ul>
-    <script type="module" src="./popup.ts"></script>
+  <header class="popup-header">
+      <img src="../assets/icon/recally-logo-primary.svg" alt="Recally logo" class="logo"/>
+    <button class="save-btn">Save Current Tab</button>
+  </header>
+
+  <h2 class="section-title">SAVED POSTS</h2>
+
+  <!-- Saved Posts List -->
+  <ul class="saved-posts">
+    <li class="saved-post">
+      <div class="post-thumb"></div>
+      <div class="post-info">
+        <p class="post-website">Website</p>
+        <p class="post-title">Test Title Blah</p>
+        <p class="post-tags">Tags: Tech, Fashion, Lifestyle</p>
+      </div>
+    </li>
+
+    <li class="saved-post">
+      <div class="post-thumb"></div>
+      <div class="post-info">
+        <p class="post-website">Website</p>
+        <p class="post-title">Test Title Blah</p>
+        <p class="post-tags">Tags: Tech, Fashion, Lifestyle</p>
+      </div>
+    </li>
+
+    <li class="saved-post">
+      <div class="post-thumb"></div>
+      <div class="post-info">
+        <p class="post-website">Website</p>
+        <p class="post-title">Test Title Blah</p>
+        <p class="post-tags">Tags: Tech, Fashion, Lifestyle</p>
+      </div>
+    </li>
+  </ul>
+
+  <script type="module" src="./popup.ts"></script>
 </body>
 </html>
