@@ -39,10 +39,27 @@ html, body {
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s, transform 0.2s;
 }
-.save-btn:hover {
-  background-color: #1E3248;
+
+.save-btn.success {
+  animation: pulse 0.2s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.save-btn.error {
+  background-color: #d9534f;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #3A6CA1; /* slightly lighter */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 /* === Section Title === */
@@ -103,4 +120,11 @@ html, body {
   font-size: 12px;
   opacity: 0.9;
   margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  color: #26405e;
+  opacity: 0.7;
+  margin-top: 40px;
 }
