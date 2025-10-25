@@ -6,9 +6,9 @@
         "rootDir": "src",
 
         // Environment Settings
-        "module": "NodeNext",
+        "module": "ESNext",
         "target": "ES2020",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "node",
         "lib": ["ES2020", "DOM"],
         "types": ["chrome", "vite/client"],
 
@@ -34,7 +34,6 @@
 
         // Project-specific Options
         "jsx": "react-jsx",
-        "verbatimModuleSyntax": true,
         "isolatedModules": true,
         "noUncheckedSideEffectImports": true,
         "moduleDetection": "force",
