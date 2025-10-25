@@ -26,7 +26,7 @@ const dummyPosts = [
 /**
  * A single saved post item.
  */
-function SavedPostItem({ post }) {
+function SavedPostItem({ post }: { post: any }) {
   return (
     <li
       className="flex items-center gap-3 rounded-[18px] bg-[#26405e] p-3 text-white"
