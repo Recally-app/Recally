@@ -1,1 +1,1 @@
-console.log("Recally background service worker running")
+console.log('Recally background service worker running');
