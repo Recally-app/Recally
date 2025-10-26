@@ -139,3 +139,34 @@ body {
     opacity: 0.7;
     margin-top: 40px;
 }
+
+/* Highlight animation for existing posts */
+.highlight-existing {
+    animation: highlight-pulse 2s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+    0% {
+        background-color: #26405e;
+        transform: scale(1);
+    }
+    25% {
+        background-color: #3b82f6;
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+    50% {
+        background-color: #3b82f6;
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+    75% {
+        background-color: #3b82f6;
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+        background-color: #26405e;
+        transform: scale(1);
+    }
+}

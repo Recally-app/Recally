@@ -9,8 +9,9 @@ export class RecallyDB extends Dexie {
         super('recally_db');
         this.version(1).stores({
             // id is primary key
+            // canonical_url is unique to prevent duplicates
             // *tags creates a multi-entry index on tags[]
-            posts: 'id, url, title, created_at, *tags',
+            posts: 'id, url, canonical_url, title, created_at, *tags',
         });
     }
 }

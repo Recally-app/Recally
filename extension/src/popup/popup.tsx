@@ -5,15 +5,82 @@ import { StorageManager } from '../storage/storageManager';
 /**
  * A single saved post item.
  */
-function SavedPostItem({ post }: { post: any }) {
+function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boolean }) {
     const website = new URL(post.url).hostname.replace('www.', '');
     // Format tags
     const tagsText = post.tags?.length ? `Tags: ${post.tags.join(', ')}` : '';
 
+    const handleClick = () => {
+        chrome.tabs.create({ url: post.url });
+    };
+
+    // Use stored favicon or fallback to Google's service
+    async function getFaviconUrl(): Promise<string> {
+        try {
+            if (post.favicon_url) return post.favicon_url;
+
+            const { hostname } = new URL(post.url);
+            const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
+
+            const res = await fetch(ddgUrl);
+            if (!res.ok) throw new Error(`favicon not found for ${hostname}`);
+
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
+        } catch (err) {
+            console.warn('⚠️ Favicon fetch failed:', err);
+            return ''; // later return default image
+        }
+    }
+
+    const [faviconUrl, setFaviconUrl] = useState<string>('');
+
+    useEffect(() => {
+        let objectUrl: string | null = null;
+
+        (async () => {
+            const resolved = await getFaviconUrl();
+            setFaviconUrl(resolved);
+
+            // Track it so we can clean up later
+            if (resolved.startsWith('blob:')) {
+                objectUrl = resolved;
+            }
+        })();
+
+        // Cleanup for blobs
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+        };
+    }, [post.url, post.favicon_url]);
+
     return (
-        <li className="flex items-center gap-3 rounded-[18px] bg-[#26405e] p-3 text-white">
+        <li
+            className={`flex items-center gap-3 rounded-[18px] p-3 text-white transition-all duration-500 cursor-pointer hover:shadow-md hover:scale-[1.02] ${
+                isHighlighted
+                    ? 'bg-blue-500 shadow-lg scale-105'
+                    : 'bg-[#26405e] hover:bg-[#3a6ca1]'
+            }`}
+            data-post-id={post.id}
+            onClick={handleClick}
+            title={`Click to open: ${post.title}`}
+        >
             {/* Post Thumbnail */}
-            <div className="h-8 w-8 flex-shrink-0 rounded bg-[#a5b9ce]"></div>
+            <div className="h-8 w-8 flex-shrink-0 rounded flex items-center justify-center overflow-hidden">
+                {faviconUrl ? (
+                    <img
+                        src={faviconUrl}
+                        alt={`${website} favicon`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                ) : (
+                    <div className="w-full h-full rounded" />
+                )}
+            </div>
 
             {/* Post Info */}
             <div className="flex flex-col overflow-hidden">
@@ -42,16 +109,19 @@ export default function PopupApp() {
         Idle = 'idle',
         Saving = 'saving',
         Success = 'success',
+        AlreadyExists = 'already_exists',
         Error = 'error',
     }
 
     const [posts, setPosts] = useState<any[]>([]);
-    const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'success', 'error'
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Idle);
+    const [existingPostId, setExistingPostId] = useState<string | null>(null);
 
     const buttonTextMap: Record<SaveStatus, string> = {
         [SaveStatus.Idle]: 'Save Current Tab',
         [SaveStatus.Saving]: 'Saving...',
         [SaveStatus.Success]: 'Saved!',
+        [SaveStatus.AlreadyExists]: 'Already saved!',
         [SaveStatus.Error]: 'Failed to save',
     };
 
@@ -70,19 +140,58 @@ export default function PopupApp() {
     }, []);
 
     const handleSaveClick = async () => {
-        setSaveStatus('saving');
+        setSaveStatus(SaveStatus.Saving);
+        setExistingPostId(null);
+
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.url || !tab?.title) {
             console.error('Save failed: could not retrieve tab url or title');
-            setSaveStatus('error');
+            setSaveStatus(SaveStatus.Error);
         } else {
-            await StorageManager.savePost(tab.url, tab.title);
-            setSaveStatus('success');
+            try {
+                // Get favicon from tab
+                const faviconUrl = tab.favIconUrl || undefined;
+                const result = await StorageManager.savePost(tab.url, tab.title, [], faviconUrl);
+
+                if (result.wasDuplicate) {
+                    setSaveStatus(SaveStatus.AlreadyExists);
+                    setExistingPostId(result.post.id);
+
+                    // Scroll to the existing post and highlight it
+                    setTimeout(() => {
+                        const postElement = document.querySelector(
+                            `[data-post-id="${result.post.id}"]`
+                        );
+                        if (postElement) {
+                            // Hybrid approach: instant scroll if more than 50 posts, smooth otherwise
+                            const totalPosts = posts.length;
+                            const scrollBehavior = totalPosts > 50 ? 'auto' : 'smooth';
+
+                            postElement.scrollIntoView({
+                                behavior: scrollBehavior,
+                                block: 'center',
+                            });
+                            postElement.classList.add('highlight-existing');
+
+                            // Remove highlight after animation
+                            setTimeout(() => {
+                                postElement.classList.remove('highlight-existing');
+                            }, 2000);
+                        }
+                    }, 100);
+                } else {
+                    setSaveStatus(SaveStatus.Success);
+                }
+            } catch (error) {
+                console.error('Save failed:', error);
+                setSaveStatus(SaveStatus.Error);
+            }
         }
 
         await fetchPosts();
         setTimeout(() => {
-            setSaveStatus('idle');
+            setSaveStatus(SaveStatus.Idle);
+            setExistingPostId(null);
         }, 1500);
     };
 
@@ -100,7 +209,7 @@ export default function PopupApp() {
         'hover:shadow-md',
         'hover:-translate-y-px',
         'disabled:opacity-50',
-        saveStatus === 'error' ? 'bg-red-500' : 'bg-[#26405e]',
+        saveStatus === SaveStatus.Error ? 'bg-red-500' : 'bg-[#26405e]',
         isSaving ? 'opacity-70' : 'hover:bg-[#3a6ca1]',
     ].join(' ');
 
@@ -122,8 +231,11 @@ export default function PopupApp() {
                     <EmptyState />
                 ) : (
                     posts.map((post: any) => (
-                        // Using post.url as a key. If you have a unique ID, use that.
-                        <SavedPostItem key={post.url} post={post} />
+                        <SavedPostItem
+                            key={post.id}
+                            post={post}
+                            isHighlighted={existingPostId === post.id}
+                        />
                     ))
                 )}
             </ul>

@@ -8,8 +8,8 @@ import type { StorageProvider } from '../../../shared/';
 const activeProvider: StorageProvider = LocalStorageProvider;
 
 export const StorageManager = {
-    async savePost(url: string, title: string, tags: string[] = []) {
-        return activeProvider.savePost(url, title, tags);
+    async savePost(url: string, title: string, tags: string[] = [], faviconUrl?: string) {
+        return activeProvider.savePost(url, title, tags, faviconUrl);
     },
     async getAllPosts() {
         return activeProvider.getAllPosts();
