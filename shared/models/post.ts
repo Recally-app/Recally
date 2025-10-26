@@ -7,4 +7,5 @@ export interface Post {
     created_at: string;
     updated_at: string;
     notes?: string;
+    favicon_url?: string; // Favicon URL from the tab
 }

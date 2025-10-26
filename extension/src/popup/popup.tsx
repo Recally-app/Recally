@@ -10,15 +10,56 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
     // Format tags
     const tagsText = post.tags?.length ? `Tags: ${post.tags.join(', ')}` : '';
 
+    const handleClick = () => {
+        chrome.tabs.create({ url: post.url });
+    };
+
+    // Use stored favicon or fallback to Google's service
+    const getFaviconUrl = () => {
+        if (post.favicon_url) {
+            return post.favicon_url;
+        }
+        // Fallback to Google's favicon service
+        try {
+            const urlObj = new URL(post.url);
+            return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32`;
+        } catch {
+            return null;
+        }
+    };
+
+    const faviconUrl = getFaviconUrl();
+
+    if (post.title === 'New Tab') {
+        console.log('🟡 Rendering New Tab item');
+        console.log('URL:', post.url);
+        console.log('Favicon:', faviconUrl);
+    }
+
     return (
         <li
-            className={`flex items-center gap-3 rounded-[18px] p-3 text-white transition-all duration-500 ${
-                isHighlighted ? 'bg-blue-500 shadow-lg scale-105' : 'bg-[#26405e]'
+            className={`flex items-center gap-3 rounded-[18px] p-3 text-white transition-all duration-500 cursor-pointer hover:shadow-md hover:scale-[1.02] ${
+                isHighlighted
+                    ? 'bg-blue-500 shadow-lg scale-105'
+                    : 'bg-[#26405e] hover:bg-[#3a6ca1]'
             }`}
             data-post-id={post.id}
+            onClick={handleClick}
+            title={`Click to open: ${post.title}`}
         >
             {/* Post Thumbnail */}
-            <div className="h-8 w-8 flex-shrink-0 rounded bg-[#a5b9ce]"></div>
+            <div className="h-8 w-8 flex-shrink-0 rounded flex items-center justify-center overflow-hidden">
+                {faviconUrl ? (
+                    <img
+                        src={faviconUrl}
+                        alt={`${website} favicon`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                ) : (
+                    <div className="w-full h-full rounded bg-[#a5b9ce]" />
+                )}
+            </div>
 
             {/* Post Info */}
             <div className="flex flex-col overflow-hidden">
@@ -87,7 +128,9 @@ export default function PopupApp() {
             setSaveStatus(SaveStatus.Error);
         } else {
             try {
-                const result = await StorageManager.savePost(tab.url, tab.title);
+                // Get favicon from tab
+                const faviconUrl = tab.favIconUrl || undefined;
+                const result = await StorageManager.savePost(tab.url, tab.title, [], faviconUrl);
 
                 if (result.wasDuplicate) {
                     setSaveStatus(SaveStatus.AlreadyExists);
@@ -102,8 +145,11 @@ export default function PopupApp() {
                             // Hybrid approach: instant scroll if more than 50 posts, smooth otherwise
                             const totalPosts = posts.length;
                             const scrollBehavior = totalPosts > 50 ? 'auto' : 'smooth';
-                            
-                            postElement.scrollIntoView({ behavior: scrollBehavior, block: 'center' });
+
+                            postElement.scrollIntoView({
+                                behavior: scrollBehavior,
+                                block: 'center',
+                            });
                             postElement.classList.add('highlight-existing');
 
                             // Remove highlight after animation

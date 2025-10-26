@@ -117,7 +117,7 @@ async function canonicalizeUrl(url: string): Promise<string> {
  * Implements the shared StorageProvider interface.
  */
 export const LocalStorageProvider: StorageProvider = {
-    async savePost(url: string, title: string, tags: string[] = []): Promise<SavePostResult> {
+    async savePost(url: string, title: string, tags: string[] = [], faviconUrl?: string): Promise<SavePostResult> {
         const canonicalUrl = await canonicalizeUrl(url);
         const now = new Date().toISOString();
 
@@ -140,6 +140,7 @@ export const LocalStorageProvider: StorageProvider = {
                 tags,
                 created_at: now,
                 updated_at: now,
+                ...(faviconUrl && { favicon_url: faviconUrl }), // Store favicon URL from tab if available
             };
 
             await db.posts.put(post);
