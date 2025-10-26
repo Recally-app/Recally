@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const LocalStorageProvider: StorageProvider = {
     async savePost(url: string, title: string, tags: string[] = []): Promise<Post> {
-        const now = new Date();
+        const now = new Date().toISOString();
 
         const post: Post = {
             id: uuidv4(),

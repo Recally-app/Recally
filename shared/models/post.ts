@@ -3,7 +3,7 @@ export interface Post {
     url: string;
     title: string;
     tags: string[];
-    created_at: Date;
-    updated_at: Date;
+    created_at: string;
+    updated_at: string;
     notes?: string;
 }
