@@ -1,6 +1,7 @@
 export interface Post {
     id: string;
-    url: string;
+    url: string; // Original URL
+    canonical_url: string; // Canonicalized URL for duplicate detection
     title: string;
     tags: string[];
     created_at: string;
