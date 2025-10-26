@@ -15,26 +15,47 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
     };
 
     // Use stored favicon or fallback to Google's service
-    const getFaviconUrl = () => {
-        if (post.favicon_url) {
-            return post.favicon_url;
-        }
-        // Fallback to Google's favicon service
+    async function getFaviconUrl(): Promise<string> {
         try {
-            const urlObj = new URL(post.url);
-            return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=32`;
-        } catch {
-            return null;
+            if (post.favicon_url) return post.favicon_url;
+
+            const { hostname } = new URL(post.url);
+            const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
+
+            const res = await fetch(ddgUrl);
+            if (!res.ok) throw new Error(`favicon not found for ${hostname}`);
+
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
+        } catch (err) {
+            console.warn('⚠️ Favicon fetch failed:', err);
+            return ''; // later return default image
         }
-    };
-
-    const faviconUrl = getFaviconUrl();
-
-    if (post.title === 'New Tab') {
-        console.log('🟡 Rendering New Tab item');
-        console.log('URL:', post.url);
-        console.log('Favicon:', faviconUrl);
     }
+
+    const [faviconUrl, setFaviconUrl] = useState<string>('');
+
+    useEffect(() => {
+        let objectUrl: string | null = null;
+
+        (async () => {
+            const resolved = await getFaviconUrl();
+            setFaviconUrl(resolved);
+
+            // Track it so we can clean up later
+            if (resolved.startsWith('blob:')) {
+                objectUrl = resolved;
+            }
+        })();
+
+        // Cleanup for blobs
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+        };
+    }, [post.url, post.favicon_url]);
 
     return (
         <li
@@ -57,7 +78,7 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
                         onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
                 ) : (
-                    <div className="w-full h-full rounded bg-[#a5b9ce]" />
+                    <div className="w-full h-full rounded" />
                 )}
             </div>
 
