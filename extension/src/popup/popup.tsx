@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import { StorageManager } from '../storage/storageManager';
-// In a real Vite project, you'd import the logo like this:
-// import logoSrc from '../assets/icon/recally-logo-primary.svg';
-
-// --- Dummy Data ---
-// In a real app, this would come from props or an API.
-
-// To test the empty state, use this instead:
-// const dummyPosts = [];
-// --------------------
 
 /**
  * A single saved post item.
@@ -47,8 +38,26 @@ function EmptyState() {
 }
 
 export default function PopupApp() {
+    enum SaveStatus {
+        Idle = 'idle',
+        Saving = 'saving',
+        Success = 'success',
+        Error = 'error',
+    }
+
     const [posts, setPosts] = useState<any[]>([]);
     const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'success', 'error'
+
+    const buttonTextMap: Record<SaveStatus, string> = {
+        [SaveStatus.Idle]: 'Save Current Tab',
+        [SaveStatus.Saving]: 'Saving...',
+        [SaveStatus.Success]: 'Saved!',
+        [SaveStatus.Error]: 'Failed to save',
+    };
+
+    const buttonText = buttonTextMap[saveStatus];
+    const isSaving = saveStatus === SaveStatus.Saving;
+    const notIdle = saveStatus !== SaveStatus.Idle;
 
     // This function replaces the `renderPosts` logic
     const fetchPosts = async () => {
@@ -56,43 +65,26 @@ export default function PopupApp() {
         setPosts(allPosts);
     };
 
-    // This replaces `DOMContentLoaded` and the initial `renderPosts()` call.
-    // It runs once when the component first mounts.
     useEffect(() => {
         fetchPosts();
-    }, []); // The empty array [] means "run this only once"
+    }, []);
 
-    // This replaces your `saveButton.addEventListener('click', ...)`
     const handleSaveClick = async () => {
-        setSaveStatus('saving'); // Replaces saveButton.disabled = true and textContent
-
-        try {
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (!tab?.url || !tab?.title) throw new Error('Missing tab info');
-
+        setSaveStatus('saving');
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.url || !tab?.title) {
+            console.error('Save failed: could not retrieve tab url or title');
+            setSaveStatus('error');
+        } else {
             await StorageManager.savePost(tab.url, tab.title);
-
-            setSaveStatus('success'); // Replaces textContent = 'Saved!' and classList.add
-            await fetchPosts(); // Re-fetch posts to update the list
-        } catch (error) {
-            console.error('Save failed:', error);
-            setSaveStatus('error'); // Replaces textContent = 'Failed to save' and classList.add
+            setSaveStatus('success');
         }
 
-        // Replaces the setTimeout to revert the button
+        await fetchPosts();
         setTimeout(() => {
             setSaveStatus('idle');
         }, 1500);
     };
-
-    // --- Logic for dynamic button text and styles ---
-
-    const isSaving = saveStatus === 'saving';
-
-    let buttonText = 'Save Current Tab';
-    if (saveStatus === 'saving') buttonText = 'Saving...';
-    if (saveStatus === 'success') buttonText = 'Saved!';
-    if (saveStatus === 'error') buttonText = 'Failed to save';
 
     const buttonClasses = [
         'rounded-full',
@@ -108,9 +100,7 @@ export default function PopupApp() {
         'hover:shadow-md',
         'hover:-translate-y-px',
         'disabled:opacity-50',
-        'disabled:cursor-not-allowed',
         saveStatus === 'error' ? 'bg-red-500' : 'bg-[#26405e]',
-        saveStatus === 'success' ? 'animate-ping' : '', // Feedback animation
         isSaving ? 'opacity-70' : 'hover:bg-[#3a6ca1]',
     ].join(' ');
 
@@ -118,7 +108,7 @@ export default function PopupApp() {
         <div className="h-[600px] w-[400px] overflow-auto bg-[#d8edfd] font-sans text-[#26405e]">
             <header className="flex items-center justify-between px-[14px] py-[6px]">
                 <img src={logoSrc} alt="Recally logo" className="h-[50px] w-[200px]" />
-                <button className={buttonClasses} onClick={handleSaveClick} disabled={isSaving}>
+                <button className={buttonClasses} onClick={handleSaveClick} disabled={notIdle}>
                     {buttonText}
                 </button>
             </header>
@@ -127,9 +117,6 @@ export default function PopupApp() {
                 SAVED POSTS
             </h2>
 
-            {/* This is the declarative part.
-        React will automatically render the correct UI based on the `posts` state.
-      */}
             <ul className="m-0 list-none flex flex-col gap-3 px-3">
                 {posts.length === 0 ? (
                     <EmptyState />
