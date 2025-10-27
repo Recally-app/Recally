@@ -33,7 +33,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
     }, []);
 
     const panelClasses = `
-    absolute z-20 mt-0 w-56 origin-top-right rounded-md bg-[#113F67] text-[#FDF5AA] border border-[#FDF5AA] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none 
+    absolute z-20 mt-0 w-56 origin-top-right rounded-md bg-[#113F67] text-[#FDF5AA]  shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none 
     ${panelClassName || 'right-0'}
   `;
 
