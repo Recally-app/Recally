@@ -104,14 +104,14 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
               <Dropdown >
                 <button
                     onClick={handleDeletePost}
-                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#FDF5AA]"
+                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
                     role="menuitem"
                 >
                     Delete
                 </button>
                 <button
                     onClick={()=>{}}
-                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#FDF5AA]"
+                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
                     role="menuitem"
                 >
                     AI Summary
