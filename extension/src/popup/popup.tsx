@@ -11,7 +11,7 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
     // Format tags
     const tagsText = post.tags?.length ? `Tags: ${post.tags.join(', ')}` : '';
 
-    const handleOpenSavedTab = () => {
+    const handleClickedSavedPost = () => {
         chrome.tabs.create({ url: post.url });
     };
 
@@ -75,7 +75,7 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
             <div
                 className="flex items-center gap-3 overflow-hidden"
                 data-post-id={post.id}
-                onClick={handleOpenSavedTab}
+                onClick={handleClickedSavedPost}
                 title={`Click to open: ${post.title}`}
             >
                 <div className="h-8 w-8 flex-shrink-0 rounded flex items-center justify-center overflow-hidden">
@@ -104,25 +104,20 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
               <Dropdown >
                 <button
                     onClick={handleDeletePost}
-                    className="block w-full px-4 py-2 text-left  text-sm text-red-700 hover:bg-red-50"
+                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#FDF5AA]"
                     role="menuitem"
                 >
                     Delete
                 </button>
                 <button
-                    onClick={handleDeletePost}
-                    className="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
+                    onClick={()=>{}}
+                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#FDF5AA]"
                     role="menuitem"
                 >
-                    AI summary
+                    AI Summary
                 </button>
-                <button
-                    onClick={handleDeletePost}
-                    className="block w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50"
-                    role="menuitem"
-                >
-                    AI summary
-                </button>
+                
+               
                 
             </Dropdown>
             </div>
@@ -130,9 +125,7 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
     );
 }
 
-/**
- * Message shown when there are no saved posts.
- */
+
 function EmptyState() {
     return (
         <div className="mt-10 text-center text-[#26405e] opacity-70">
