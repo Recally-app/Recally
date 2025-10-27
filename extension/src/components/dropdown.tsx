@@ -62,7 +62,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
             {/* We wrap the trigger in a div with the onClick handler
           so the user can pass in a simple element.
       */}
-            <div>
+            <div title='Actions'>
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)} // Toggle the 'isOpen' state on click
