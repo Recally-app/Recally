@@ -33,8 +33,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
     }, []);
 
     const panelClasses = `
-    absolute right-0 translate-x-full rounded-md bg-[#113F67] text-white w-fit z-50  ${panelClassName}
-  `;
+    absolute right-0 translate-x-full rounded-md bg-[#113F67] text-white w-fit z-50  ${panelClassName}`;
 
     return (
         <div ref={dropdownRef} className={` ${className}`}>
@@ -42,7 +41,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className=" inline-flex w-full justify-center px-4 py-2 text-xs font-bold text-black  "
+                    className="inline-flex w-full justify-center px-4 py-2 text-xs font-bold text-black"
                 >
                     <FaPencilAlt color="#FFFFFF" />
                 </button>
