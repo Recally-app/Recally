@@ -33,8 +33,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
     }, []);
 
     const panelClasses = `
-    absolute z-20 mt-0 w-56 origin-top-right rounded-md bg-[#113F67] text-[#FFFFFF]  shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none 
-    ${panelClassName || 'right-0'}
+    absolute right-0 translate-x-full rounded-md bg-[#113F67] text-white w-fit z-50  ${panelClassName}
   `;
 
     return (
@@ -50,7 +49,10 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
             </div>
 
             {isOpen && (
-                <div className="bg-red-500">
+                <div
+                    className="absolute left-4/5 top-4/5 ml-2 z-50"
+                    onMouseLeave={() => setIsOpen(false)}
+                >
                     <div
                         className={panelClasses}
                         role="menu"

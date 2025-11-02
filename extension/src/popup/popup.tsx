@@ -112,7 +112,7 @@ function SavedPostItem({
                 <Dropdown>
                     <button
                         onClick={onDelete}
-                        className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
+                        className="block w-full px-4 py-2 text-left  text-sm  "
                         role="menuitem"
                     >
                         Delete
