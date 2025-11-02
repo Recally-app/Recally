@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import { StorageManager } from '../storage/storageManager';
+import Dropdown from '../components/dropdown';
 
 /**
  * A single saved post item.
  */
-function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boolean }) {
+function SavedPostItem({
+    post,
+    isHighlighted,
+    onDelete,
+}: {
+    post: any;
+    isHighlighted?: boolean;
+    onDelete: () => void;
+}) {
     const website = new URL(post.url).hostname.replace('www.', '');
     // Format tags
     const tagsText = post.tags?.length ? `Tags: ${post.tags.join(', ')}` : '';
 
-    const handleClick = () => {
+    const handleClickedSavedPost = () => {
         chrome.tabs.create({ url: post.url });
     };
 
@@ -57,44 +66,63 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
         };
     }, [post.url, post.favicon_url]);
 
+    const handleDeletePost = () => {
+        StorageManager.deletePost(post.id);
+    };
+
     return (
         <li
-            className={`flex items-center gap-3 rounded-[18px] p-3 text-white transition-all duration-500 cursor-pointer hover:shadow-md hover:scale-[1.02] ${
+            className={`relative flex items-center justify-between gap-3 rounded-[18px] p-3 text-white transition-all duration-500 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:z-10 ${
                 isHighlighted
                     ? 'bg-blue-500 shadow-lg scale-105'
                     : 'bg-[#26405e] hover:bg-[#3a6ca1]'
             }`}
             data-post-id={post.id}
-            onClick={handleClick}
-            title={`Click to open: ${post.title}`}
         >
             {/* Post Thumbnail */}
-            <div className="h-8 w-8 flex-shrink-0 rounded flex items-center justify-center overflow-hidden">
-                {faviconUrl ? (
-                    <img
-                        src={faviconUrl}
-                        alt={`${website} favicon`}
-                        className="w-full h-full object-contain"
-                        onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                ) : (
-                    <div className="w-full h-full rounded" />
-                )}
-            </div>
+            <div
+                className="flex items-center gap-3 overflow-hidden"
+                data-post-id={post.id}
+                onClick={handleClickedSavedPost}
+                title={`Click to open: ${post.title}`}
+            >
+                <div className="h-8 w-8 flex-shrink-0 rounded flex items-center justify-center overflow-hidden">
+                    {faviconUrl ? (
+                        <img
+                            src={faviconUrl}
+                            alt={`${website} favicon`}
+                            className="w-full h-full object-contain"
+                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                    ) : (
+                        <div className="w-full h-full rounded" />
+                    )}
+                </div>
 
-            {/* Post Info */}
-            <div className="flex flex-col overflow-hidden">
-                <p className="m-0 truncate text-xs opacity-80">{website}</p>
-                <h3 className="m-0 truncate font-semibold leading-tight my-[2px]">{post.title}</h3>
-                {tagsText && <p className="m-0 truncate text-xs opacity-90">{tagsText}</p>}
+                {/* Post Info */}
+                <div className="flex flex-col overflow-hidden text-ellipsis">
+                    <p className="m-0 truncate text-xs opacity-80">{website}</p>
+                    <h3 className="m-0 truncate font-semibold leading-tight my-[2px]">
+                        {post.title}
+                    </h3>
+                    {tagsText && <p className="m-0 truncate text-xs opacity-90">{tagsText}</p>}
+                </div>
+            </div>
+            <div>
+                <Dropdown>
+                    <button
+                        onClick={onDelete}
+                        className="block w-full px-4 py-2 text-left  text-sm  "
+                        role="menuitem"
+                    >
+                        Delete
+                    </button>
+                </Dropdown>
             </div>
         </li>
     );
 }
 
-/**
- * Message shown when there are no saved posts.
- */
 function EmptyState() {
     return (
         <div className="mt-10 text-center text-[#26405e] opacity-70">
@@ -195,6 +223,16 @@ export default function PopupApp() {
         }, 1500);
     };
 
+    const handleDeletePost = async (postId: string) => {
+        try {
+            await StorageManager.deletePost(postId);
+            // Optimistically update local state
+            setPosts((prev) => prev.filter((p) => p.id !== postId));
+        } catch (err) {
+            console.error('Failed to delete post:', err);
+        }
+    };
+
     const buttonClasses = [
         'rounded-full',
         'border-none',
@@ -235,6 +273,7 @@ export default function PopupApp() {
                             key={post.id}
                             post={post}
                             isHighlighted={existingPostId === post.id}
+                            onDelete={() => handleDeletePost(post.id)}
                         />
                     ))
                 )}
