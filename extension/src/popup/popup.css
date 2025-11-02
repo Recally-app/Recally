@@ -34,6 +34,16 @@ body {
     width: 200px;
 }
 
+.removing {
+  opacity: 0;
+  transform: translateX(80px); /* slide right */
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+
+
 .save-btn {
     background-color: #26405e;
     color: white;

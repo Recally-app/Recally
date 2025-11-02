@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import { StorageManager } from '../storage/storageManager';
-import Dropdown from '../components/dropdown';
+import Dropdown from '../../../shared/components/dropdown';
 
 /**
  * A single saved post item.
  */
-function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boolean }) {
+function SavedPostItem({
+    post,
+    isHighlighted,
+    onDelete,
+}: {
+    post: any;
+    isHighlighted?: boolean;
+    onDelete: () => void;
+}) {
     const website = new URL(post.url).hostname.replace('www.', '');
     // Format tags
     const tagsText = post.tags?.length ? `Tags: ${post.tags.join(', ')}` : '';
@@ -58,10 +66,6 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
         };
     }, [post.url, post.favicon_url]);
 
-    const handleDeletePost = () => {
-        StorageManager.deletePost(post.id);
-    };
-
     return (
         <li
             className={`relative flex items-center justify-between gap-3 rounded-[18px] p-3 text-white transition-all duration-500 cursor-pointer hover:shadow-md hover:scale-[1.02] hover:z-10 ${
@@ -101,30 +105,19 @@ function SavedPostItem({ post, isHighlighted }: { post: any; isHighlighted?: boo
                 </div>
             </div>
             <div>
-              <Dropdown >
-                <button
-                    onClick={handleDeletePost}
-                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
-                    role="menuitem"
-                >
-                    Delete
-                </button>
-                <button
-                    onClick={()=>{}}
-                    className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
-                    role="menuitem"
-                >
-                    AI Summary
-                </button>
-                
-               
-                
-            </Dropdown>
+                <Dropdown>
+                    <button
+                        onClick={onDelete}
+                        className="block w-full px-4 py-2 text-left  text-sm hover:rounded-md hover:bg-[#58A0C8]"
+                        role="menuitem"
+                    >
+                        Delete
+                    </button>
+                </Dropdown>
             </div>
         </li>
     );
 }
-
 
 function EmptyState() {
     return (
@@ -226,6 +219,16 @@ export default function PopupApp() {
         }, 1500);
     };
 
+    const handleDeletePost = async (postId: string) => {
+        try {
+            await StorageManager.deletePost(postId);
+            // Optimistically update local state
+            setPosts((prev) => prev.filter((p) => p.id !== postId));
+        } catch (err) {
+            console.error('Failed to delete post:', err);
+        }
+    };
+
     const buttonClasses = [
         'rounded-full',
         'border-none',
@@ -266,6 +269,7 @@ export default function PopupApp() {
                             key={post.id}
                             post={post}
                             isHighlighted={existingPostId === post.id}
+                            onDelete={() => handleDeletePost(post.id)}
                         />
                     ))
                 )}
