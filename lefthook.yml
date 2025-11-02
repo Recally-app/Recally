@@ -40,5 +40,13 @@
 #
 #     - script: "hello.go"
 #       runner: go run
-
+pre-commit:
+  parallel: true
+  commands:
+    prettier:
+      glob: "*.{js,ts,tsx,css,html,json}"
+      run: npx prettier --write {staged_files}
+    eslint:
+      glob: "*.{js,ts,tsx}"
+      run: npx eslint --fix {staged_files}
 
