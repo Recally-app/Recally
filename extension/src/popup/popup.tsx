@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Swal from 'sweetalert2'
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import { StorageManager } from '../storage/storageManager';
 import Dropdown from '../components/dropdown';
@@ -224,12 +225,38 @@ export default function PopupApp() {
     };
 
     const handleDeletePost = async (postId: string) => {
-        try {
-            await StorageManager.deletePost(postId);
-            // Optimistically update local state
-            setPosts((prev) => prev.filter((p) => p.id !== postId));
-        } catch (err) {
-            console.error('Failed to delete post:', err);
+        const result = await Swal.fire({
+            title: "Delete saved tab?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            width: '80%',
+            background: '#d8edfd',
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545", 
+            cancelButtonColor: "#26405e", 
+            confirmButtonText: "Yes, delete it!",
+            focusCancel: true ,
+            customClass: {
+                icon: 'big-success-icon',
+            }
+        });
+    
+        if (result.isConfirmed) {
+            try {
+               
+                await StorageManager.deletePost(postId);
+                setPosts((prev) => prev.filter((p) => p.id !== postId));     
+    
+            } catch (err) {
+                console.error('Failed to delete post:', err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Deletion Failed',
+                    text: 'Could not delete tab. Please try again.',
+                    confirmButtonColor: '#26405e',
+                });
+            }
         }
     };
 
