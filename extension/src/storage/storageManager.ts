@@ -17,6 +17,9 @@ export const StorageManager = {
     async deletePost(id: string) {
         return activeProvider.deletePost(id);
     },
+    async deleteAllPosts() {
+        return activeProvider.deleteAllPosts();
+    },
     async searchPosts(query: string) {
         return activeProvider.searchPosts(query);
     },

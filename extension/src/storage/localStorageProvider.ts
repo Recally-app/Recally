@@ -117,7 +117,12 @@ async function canonicalizeUrl(url: string): Promise<string> {
  * Implements the shared StorageProvider interface.
  */
 export const LocalStorageProvider: StorageProvider = {
-    async savePost(url: string, title: string, tags: string[] = [], faviconUrl?: string): Promise<SavePostResult> {
+    async savePost(
+        url: string,
+        title: string,
+        tags: string[] = [],
+        faviconUrl?: string
+    ): Promise<SavePostResult> {
         const canonicalUrl = await canonicalizeUrl(url);
         const now = new Date().toISOString();
 
@@ -157,6 +162,10 @@ export const LocalStorageProvider: StorageProvider = {
 
     async deletePost(id: string): Promise<void> {
         await db.posts.delete(id);
+    },
+
+    async deleteAllPosts(): Promise<void> {
+        await db.posts.clear();
     },
 
     async searchPosts(query: string): Promise<Post[]> {

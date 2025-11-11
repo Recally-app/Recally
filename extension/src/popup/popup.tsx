@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import { StorageManager } from '../storage/storageManager';
 import Dropdown from '../components/dropdown';
@@ -66,10 +66,6 @@ function SavedPostItem({
             }
         };
     }, [post.url, post.favicon_url]);
-
-    const handleDeletePost = () => {
-        StorageManager.deletePost(post.id);
-    };
 
     return (
         <li
@@ -226,34 +222,66 @@ export default function PopupApp() {
 
     const handleDeletePost = async (postId: string) => {
         const result = await Swal.fire({
-            title: "Delete saved tab?",
+            title: 'Delete saved tab?',
             text: "You won't be able to revert this!",
-            icon: "warning",
+            icon: 'warning',
             width: '80%',
             background: '#d8edfd',
             showCancelButton: true,
-            confirmButtonColor: "#dc3545", 
-            cancelButtonColor: "#26405e", 
-            confirmButtonText: "Yes, delete it!",
-            focusCancel: true ,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#26405e',
+            confirmButtonText: 'Yes, delete it!',
+            focusCancel: true,
             customClass: {
                 icon: 'big-success-icon',
-            }
+            },
         });
-    
+
         if (result.isConfirmed) {
             try {
-               
                 await StorageManager.deletePost(postId);
-                setPosts((prev) => prev.filter((p) => p.id !== postId));     
-    
+                setPosts((prev) => prev.filter((p) => p.id !== postId));
             } catch (err) {
                 console.error('Failed to delete post:', err);
 
                 Swal.fire({
                     icon: 'error',
                     title: 'Deletion Failed',
-                    text: 'Could not delete tab. Please try again.',
+                    text: 'Could not delete Post. Please try again.',
+                    confirmButtonColor: '#26405e',
+                });
+            }
+        }
+    };
+
+    const handleDeleteAllPosts = async () => {
+        const result = await Swal.fire({
+            title: 'Are you sure you want to delete all posts?',
+            text: 'You will loose all your data!',
+            icon: 'warning',
+            width: '80%',
+            background: '#d8edfd',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#26405e',
+            confirmButtonText: 'Yes, delete it!',
+            focusCancel: true,
+            customClass: {
+                icon: 'big-success-icon',
+            },
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await StorageManager.deleteAllPosts();
+                await fetchPosts();
+            } catch (err) {
+                console.error('Failed to delete all posts:', err);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Deletion Failed',
+                    text: 'Could not posts. Please try again.',
                     confirmButtonColor: '#26405e',
                 });
             }
@@ -286,11 +314,9 @@ export default function PopupApp() {
                     {buttonText}
                 </button>
             </header>
-
             <h2 className="section-title mx-3 my-2 mb-5 border-b-2 border-[#26405e] pb-1 text-base font-bold">
                 SAVED POSTS
             </h2>
-
             <ul className="m-0 list-none flex flex-col gap-3 px-3">
                 {posts.length === 0 ? (
                     <EmptyState />
@@ -305,6 +331,16 @@ export default function PopupApp() {
                     ))
                 )}
             </ul>
+
+            {/* TODO: Move this to settings icon*/}
+            <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-3">
+                <button
+                    onClick={handleDeleteAllPosts}
+                    className="w-full py-2 bg-red-600 text-white rounded-md"
+                >
+                    Delete all posts
+                </button>
+            </div>
         </div>
     );
 }
