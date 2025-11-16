@@ -60,9 +60,93 @@ The technology used to develop Recally is still being decided but currently we h
 - UI: HTML, CSS, and TypeScript
 - Runtime: Chrome or Edge extension environment
 
+### ⚡ Quick Start
+
+If you just want to try out the extension quickly:
+
+1. **Clone this repo**
+   ```bash
+   git clone https://github.com/Recally-app/Recally.git
+   cd extension
+   ```
+
+2. **Install Node.js (version 20 or higher)**  
+   See the [Install Node.js](#install-nodejs) section below 👇  
+   Or download directly from the official website: [https://nodejs.org](https://nodejs.org)
+
+3. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Run in development mode**
+   ```bash
+   npm run dev
+   ```
+
+5. **Load into Chrome**
+   - Open `chrome://extensions`
+   - Enable **Developer mode**
+   - Click **Load unpacked**
+   - Select the generated `dist` folder  
+   ✅ You should now see the Recally icon appear in your toolbar!
+
+---
+
+### Install Node.js
+
+Recally requires **Node.js v20 or greater** (which includes npm) to run locally.  
+If you don’t have Node.js installed yet, you can install it on via the command line as described below, or alternatively visit [https://nodejs.org](https://nodejs.org) and download the **LTS (recommended)** installer for your operating system.
+
+#### macOS
+If you have [Homebrew](https://brew.sh/) installed:
+```bash
+brew install node
+```
+If you don’t have Homebrew, install it first:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+Then run `brew install node`.
+
+---
+
+#### Windows (PowerShell)
+Use the built-in Windows package manager:
+```powershell
+winget install OpenJS.NodeJS.LTS
+```
+Verify installation:
+```powershell
+node -v
+npm -v
+```
+
+---
+
+#### Linux (Ubuntu / Debian)
+Run:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+---
+
+#### ✅ Verify Installation
+Run these commands to confirm Node and npm are installed:
+```bash
+node -v
+npm -v
+```
+You should see Node **v20 or higher** and npm **v9 or higher**.
+---
+
 ### Local Development
 
-1. **Install dependencies**
+1. **Install Node**
+[Install Node.js](#install-nodejs)
+2.  **Install dependencies**
    ```bash
    cd extension
    npm install
