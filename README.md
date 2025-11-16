@@ -140,6 +140,7 @@ node -v
 npm -v
 ```
 You should see Node **v20 or higher** and npm **v9 or higher**.
+
 ---
 
 ### Local Development
