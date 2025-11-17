@@ -11,10 +11,12 @@ function SavedPostItem({
     post,
     isHighlighted,
     onDelete,
+    onAddTags,
 }: {
     post: any;
     isHighlighted?: boolean;
     onDelete: () => void;
+    onAddTags: () => void;
 }) {
     const website = new URL(post.url).hostname.replace('www.', '');
     // Format tags
@@ -108,8 +110,15 @@ function SavedPostItem({
             <div>
                 <Dropdown>
                     <button
+                        onClick={onAddTags}
+                        className="block w-full px-4 py-2 text-left text-sm"
+                        role="menuitem"
+                    >
+                        Add tag(s)
+                    </button>
+                    <button
                         onClick={onDelete}
-                        className="block w-full px-4 py-2 text-left  text-sm  "
+                        className="block w-full px-4 py-2 text-left text-sm"
                         role="menuitem"
                     >
                         Delete
@@ -129,6 +138,208 @@ function EmptyState() {
     );
 }
 
+/**
+ * Get the 5 most recently used tags from all posts
+ */
+function getRecentTags(posts: any[]): string[] {
+    const tagUsage: Map<string, string> = new Map(); // tag -> most recent updated_at
+
+    posts.forEach((post) => {
+        if (post.tags && Array.isArray(post.tags)) {
+            post.tags.forEach((tag: string) => {
+                const trimmedTag = tag.trim();
+                if (trimmedTag) {
+                    const existingDate = tagUsage.get(trimmedTag);
+                    // Use the most recent updated_at for this tag
+                    if (!existingDate || post.updated_at > existingDate) {
+                        tagUsage.set(trimmedTag, post.updated_at);
+                    }
+                }
+            });
+        }
+    });
+
+    // Sort by most recent usage and return top 5
+    return Array.from(tagUsage.entries())
+        .sort((a, b) => b[1].localeCompare(a[1])) // Sort by date descending
+        .slice(0, 5)
+        .map(([tag]) => tag);
+}
+
+function TagEditModal({
+    post,
+    isOpen,
+    onClose,
+    onSave,
+    allPosts,
+}: {
+    post: any | null;
+    isOpen: boolean;
+    onClose: () => void;
+    onSave: (tags: string[]) => Promise<void>;
+    allPosts: any[];
+}) {
+    const [tagsInput, setTagsInput] = useState<string>('');
+    const tagInputRef = React.useRef<HTMLInputElement>(null);
+    const recentTags = getRecentTags(allPosts);
+
+    useEffect(() => {
+        if (isOpen && post) {
+            // Set initial tags value
+            setTagsInput(post.tags?.join(', ') || '');
+            // Focus the input after a short delay to ensure modal is rendered
+            setTimeout(() => {
+                tagInputRef.current?.focus();
+            }, 100);
+        }
+    }, [isOpen, post]);
+
+    const handleTagAdded = async () => {
+        if (!post) return;
+
+        // Parse tags: split by comma, trim, and filter out empty strings
+        const tags = Array.from(
+            new Set(
+                tagsInput
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .filter((tag) => tag.length > 0)
+            )
+        );
+
+        await onSave(tags);
+        onClose();
+    };
+
+    const handleTagSuggestionClick = (tag: string) => {
+        const currentTags = tagsInput
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+
+        // Don't add if tag already exists
+        if (currentTags.includes(tag)) {
+            return;
+        }
+
+        // Add the tag
+        const newTags = [...currentTags, tag];
+        const newValue = newTags.join(', ');
+        setTagsInput(newValue);
+        // Refocus the input
+        setTimeout(() => {
+            const input = tagInputRef.current;
+            if (input) {
+                input.focus();
+                input.setSelectionRange(newValue.length, newValue.length);
+            }
+        }, 0);
+    };
+
+    if (!isOpen || !post) return null;
+
+    const website = new URL(post.url).hostname.replace('www.', '');
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center " onClick={onClose}>
+            <div
+                className="w-[95%] max-w-md rounded-lg bg-[#26405e] p-6 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <h3 className="mb-4 text-lg font-bold text-white">Add Tags</h3>
+
+                {/* Website - Read-only display */}
+                <div className="mb-3">
+                    <label className="mb-1 block text-sm font-semibold text-white">Website</label>
+                    <div className="group relative">
+                        <p className="rounded border border-gray-500 bg-white px-3 py-2 text-gray-600 cursor-not-allowed">
+                            {website}
+                        </p>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                </div>
+
+                {/* Title - Read-only display */}
+                <div className="mb-3">
+                    <label className="mb-1 block text-sm font-semibold text-white">Title</label>
+                    <div className="group relative">
+                        <p className="rounded border border-gray-500 bg-white px-3 py-2 text-gray-600 cursor-not-allowed">
+                            {post.title}
+                        </p>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                </div>
+
+                {/* Tags - Editable input */}
+                <div className="mb-4">
+                    <label className="mb-1 block text-sm font-semibold text-white">Tags</label>
+                    <input
+                        ref={tagInputRef}
+                        type="text"
+                        value={tagsInput}
+                        onChange={(e) => setTagsInput(e.target.value)}
+                        placeholder="tag1, tag2, tag3"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        className="w-full rounded border border-[#26405e] bg-white px-3 py-2 text-[#26405e] placeholder:text-[#26405e] placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#26405e]"
+                    />
+                    <p className="mt-1 text-xs text-white opacity-70">Separate tags with commas</p>
+
+                    {/* Tag Suggestions */}
+                    {recentTags.length > 0 && (
+                        <div className="mt-3">
+                            <p className="mb-2 text-xs text-white opacity-70">Recent tags:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {recentTags.map((tag) => {
+                                    const currentTags = tagsInput
+                                        .split(',')
+                                        .map((t) => t.trim())
+                                        .filter((t) => t.length > 0);
+                                    const isSelected = currentTags.includes(tag);
+
+                                    return (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => handleTagSuggestionClick(tag)}
+                                            disabled={isSelected}
+                                            className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                                                isSelected
+                                                    ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                                                    : 'bg-white text-[#26405e] hover:bg-[#3a6ca1] hover:text-white cursor-pointer'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Buttons */}
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={onClose}
+                        className="rounded px-4 py-2 text-sm text-white hover:bg-[#26405e] hover:text-white"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleTagAdded}
+                        className="rounded bg-[#26405e] px-4 py-2 text-sm text-white hover:bg-[#3a6ca1]"
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PopupApp() {
     enum SaveStatus {
         Idle = 'idle',
@@ -143,6 +354,8 @@ export default function PopupApp() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Idle);
     const [existingPostId, setExistingPostId] = useState<string | null>(null);
+    const [tagEditModalOpen, setTagEditModalOpen] = useState<boolean>(false);
+    const [selectedPostForTags, setSelectedPostForTags] = useState<any | null>(null);
 
     const buttonTextMap: Record<SaveStatus, string> = {
         [SaveStatus.Idle]: 'Save Current Tab',
@@ -237,6 +450,28 @@ export default function PopupApp() {
             setSaveStatus(SaveStatus.Idle);
             setExistingPostId(null);
         }, 1500);
+    };
+
+    const handleAddTags = (post: any) => {
+        setSelectedPostForTags(post);
+        setTagEditModalOpen(true);
+    };
+
+    const handleSaveTags = async (tags: string[]) => {
+        if (!selectedPostForTags) return;
+
+        try {
+            await StorageManager.updatePostTags(selectedPostForTags.id, tags);
+            await fetchPosts();
+        } catch (error) {
+            console.error('Failed to update tags:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: 'Could not update tags. Please try again.',
+                confirmButtonColor: '#26405e',
+            });
+        }
     };
 
     const handleDeletePost = async (postId: string) => {
@@ -364,6 +599,7 @@ export default function PopupApp() {
                             post={post}
                             isHighlighted={existingPostId === post.id}
                             onDelete={() => handleDeletePost(post.id)}
+                            onAddTags={() => handleAddTags(post)}
                         />
                     ))
                 )}
@@ -378,6 +614,17 @@ export default function PopupApp() {
                     Delete all posts
                 </button>
             </div>
+
+            <TagEditModal
+                post={selectedPostForTags}
+                isOpen={tagEditModalOpen}
+                onClose={() => {
+                    setTagEditModalOpen(false);
+                    setSelectedPostForTags(null);
+                }}
+                onSave={handleSaveTags}
+                allPosts={posts}
+            />
         </div>
     );
 }
