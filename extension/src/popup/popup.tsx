@@ -159,11 +159,10 @@ function getRecentTags(posts: any[]): string[] {
         }
     });
 
-    // Sort by most recent usage and return top 5
     return Array.from(tagUsage.entries())
-        .sort((a, b) => b[1].localeCompare(a[1])) // Sort by date descending
+        .sort((a, b) => b[1].localeCompare(a[1]))
         .slice(0, 5)
-        .map(([tag]) => tag);
+        .map(([tag, _date]: [string, string]) => tag);
 }
 
 function TagEditModal({
@@ -185,7 +184,6 @@ function TagEditModal({
 
     useEffect(() => {
         if (isOpen && post) {
-            // Set initial tags value
             setTagsInput(post.tags?.join(', ') || '');
             // Focus the input after a short delay to ensure modal is rendered
             setTimeout(() => {
@@ -222,11 +220,9 @@ function TagEditModal({
             return;
         }
 
-        // Add the tag
         const newTags = [...currentTags, tag];
         const newValue = newTags.join(', ');
         setTagsInput(newValue);
-        // Refocus the input
         setTimeout(() => {
             const input = tagInputRef.current;
             if (input) {
