@@ -139,6 +139,8 @@ export default function PopupApp() {
     }
 
     const [posts, setPosts] = useState<any[]>([]);
+    const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState<string>('');
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Idle);
     const [existingPostId, setExistingPostId] = useState<string | null>(null);
 
@@ -154,15 +156,30 @@ export default function PopupApp() {
     const isSaving = saveStatus === SaveStatus.Saving;
     const notIdle = saveStatus !== SaveStatus.Idle;
 
-    // This function replaces the `renderPosts` logic
     const fetchPosts = async () => {
         const allPosts = await StorageManager.getAllPosts();
         setPosts(allPosts);
+        setFilteredPosts(allPosts);
     };
 
     useEffect(() => {
         fetchPosts();
     }, []);
+
+    // Filter posts based on search query using StorageManager
+    useEffect(() => {
+        const performSearch = async () => {
+            if (!searchQuery.trim()) {
+                setFilteredPosts(posts);
+                return;
+            }
+
+            const filtered = await StorageManager.searchPosts(searchQuery);
+            setFilteredPosts(filtered);
+        };
+
+        performSearch();
+    }, [searchQuery, posts]);
 
     const handleSaveClick = async () => {
         setSaveStatus(SaveStatus.Saving);
@@ -181,6 +198,8 @@ export default function PopupApp() {
                 if (result.wasDuplicate) {
                     setSaveStatus(SaveStatus.AlreadyExists);
                     setExistingPostId(result.post.id);
+                    // Clear search to ensure duplicate post is visible
+                    setSearchQuery('');
 
                     // Scroll to the existing post and highlight it
                     setTimeout(() => {
@@ -314,14 +333,32 @@ export default function PopupApp() {
                     {buttonText}
                 </button>
             </header>
+
+            {/* Search Bar */}
+            <div className="mx-3 my-2 mb-2">
+                <input
+                    type="text"
+                    placeholder="Search posts..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-[#26405e] bg-white text-[#26405e] placeholder:text-[#26405e] placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#26405e] focus:border-transparent"
+                />
+            </div>
+
             <h2 className="section-title mx-3 my-2 mb-5 border-b-2 border-[#26405e] pb-1 text-base font-bold">
                 SAVED POSTS
             </h2>
             <ul className="m-0 list-none flex flex-col gap-3 px-3">
-                {posts.length === 0 ? (
-                    <EmptyState />
+                {filteredPosts.length === 0 ? (
+                    searchQuery.trim() ? (
+                        <div className="mt-10 text-center text-[#26405e] opacity-70">
+                            <p>No posts found matching "{searchQuery}"</p>
+                        </div>
+                    ) : (
+                        <EmptyState />
+                    )
                 ) : (
-                    posts.map((post: any) => (
+                    filteredPosts.map((post: any) => (
                         <SavedPostItem
                             key={post.id}
                             post={post}
