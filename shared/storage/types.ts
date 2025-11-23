@@ -12,6 +12,7 @@ export interface StorageProvider {
         tags?: string[],
         faviconUrl?: string
     ): Promise<SavePostResult>;
+    updatePostTags(id: string, tags: string[]): Promise<Post>;
     getAllPosts(): Promise<Post[]>;
     deletePost(id: string): Promise<void>;
     deleteAllPosts(): Promise<void>;

@@ -11,6 +11,9 @@ export const StorageManager = {
     async savePost(url: string, title: string, tags: string[] = [], faviconUrl?: string) {
         return activeProvider.savePost(url, title, tags, faviconUrl);
     },
+    async updatePostTags(id: string, tags: string[]) {
+        return activeProvider.updatePostTags(id, tags);
+    },
     async getAllPosts() {
         return activeProvider.getAllPosts();
     },
