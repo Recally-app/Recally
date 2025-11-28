@@ -14,6 +14,9 @@ export const StorageManager = {
     async updatePostTags(id: string, tags: string[]) {
         return activeProvider.updatePostTags(id, tags);
     },
+    async updatePostNotes(id: string, notes: string) {
+        return activeProvider.updatePostNotes(id, notes);
+    },
     async getAllPosts() {
         return activeProvider.getAllPosts();
     },

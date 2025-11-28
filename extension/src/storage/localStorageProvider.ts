@@ -172,6 +172,22 @@ export const LocalStorageProvider: StorageProvider = {
         return updatedPost;
     },
 
+    async updatePostNotes(id: string, notes: string): Promise<Post> {
+        const post = await db.posts.get(id);
+        if (!post) {
+            throw new Error(`Post with id ${id} not found`);
+        }
+
+        const updatedPost: Post = {
+            ...post,
+            notes,
+            updated_at: new Date().toISOString(),
+        };
+
+        await db.posts.put(updatedPost);
+        return updatedPost;
+    },
+
     async getAllPosts(): Promise<Post[]> {
         return db.posts.orderBy('created_at').reverse().toArray();
     },

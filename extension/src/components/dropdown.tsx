@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, ReactNode, FC } from 'react';
-import { FaPencilAlt } from 'react-icons/fa';
+import threeDotsVertical from '../assets/icon/3-dots-vertical.svg';
 
 type DropdownProps = {
     children: ReactNode;
@@ -20,6 +20,7 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
             setIsOpen(false);
         }
     };
+    
 
     // Add event listener to the document when the component mounts
     useEffect(() => {
@@ -33,23 +34,23 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
     }, []);
 
     const panelClasses = `
-    absolute right-0 translate-x-full rounded-md bg-[#113F67] text-white w-fit z-50  ${panelClassName}`;
+    absolute right-0 top-full mt-1 rounded-md bg-[#1a1a1a] border border-[rgba(255,255,255,.2)] text-white w-[120px] shadow-lg ${panelClassName}`;
 
     return (
-        <div ref={dropdownRef} className={` ${className}`}>
+        <div ref={dropdownRef} className={`relative ${className}`}>
             <div title="Actions">
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="inline-flex w-full justify-center px-4 py-2 text-xs font-bold text-black"
+                    className="inline-flex w-full justify-center pr-0 py-2 text-xs font-bold text-black"
                 >
-                    <FaPencilAlt color="#FFFFFF" />
+                    <img src={threeDotsVertical} alt="Actions" className="w-4 h-4" />
                 </button>
             </div>
 
             {isOpen && (
                 <div
-                    className="absolute left-4/5 top-4/5 ml-2 z-50"
+                    className="absolute right-0 top-4/5 ml-2 z-50"
                     onMouseLeave={() => setIsOpen(false)}
                 >
                     <div
