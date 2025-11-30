@@ -3,7 +3,7 @@
     "compilerOptions": {
         // File Layout
         "outDir": "dist",
-        "rootDir": "src",
+        // "rootDir": "src",  // Commented out to allow imports from ../shared
 
         // Environment Settings
         "module": "ESNext",
@@ -39,5 +39,5 @@
         "moduleDetection": "force",
         "skipLibCheck": true
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "../shared/**/*"]
 }

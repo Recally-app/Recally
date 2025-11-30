@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import recallyIcon from '../assets/icon/recally_icon.svg';
 import searchIcon from '../assets/icon/search_icon.svg';
@@ -12,22 +11,33 @@ import listIcon from '../assets/icon/list-icon.svg';
 import folderIcon from '../assets/icon/folder-icon.svg';
 import { StorageManager } from '../storage/storageManager';
 import Dropdown from '../components/dropdown';
+import SavedFolderItem from '../components/SavedFolderItem';
+import CompactPostItem from '../components/CompactPostItem';
+import CreateFolderModal from '../components/CreateFolderModal';
+import EditFolderModal from '../components/EditFolderModal';
+import ManageTabsModal from '../components/ManageTabsModal';
+import PinnedTabsBar from '../components/PinnedTabsBar';
+import ConfirmModal, { type ConfirmModalType } from '../components/ConfirmModal';
+import type { Folder, Post } from '../../../shared';
 
-/**
- * A single saved post item.
- */
+/* A single saved post item. */
+/*------------------------------------------------------------------------------------------------------------------------------------- */
 function SavedPostItem({
     post,
     isHighlighted,
     onDelete,
     onAddTags,
     onSaveNote,
+    onPinToggle,
+    isPinned,
 }: {
     post: any;
     isHighlighted?: boolean;
     onDelete: () => void;
     onAddTags: () => void;
     onSaveNote: (note: string) => Promise<void>;
+    onPinToggle: () => void;
+    isPinned: boolean;
 }) {
     const website = new URL(post.url).hostname.replace('www.', '');
     
@@ -96,6 +106,17 @@ function SavedPostItem({
             }`}
             data-post-id={post.id}
         >
+            {/* Pinned Badge */}
+            {isPinned && (
+                <div className="absolute top-2 right-2 flex items-center justify-center">
+                    <img 
+                        src={pinIcon} 
+                        alt="Pinned" 
+                        className="w-3 h-3 opacity-60"
+                        title="This tab is pinned"
+                    />
+                </div>
+            )}
             {/* Post Thumbnail */}
             <div
                 className="flex items-center gap-3 overflow-hidden"
@@ -182,7 +203,7 @@ function SavedPostItem({
                         <>
                             {/* Backdrop to close on click outside */}
                             <div 
-                                className="fixed inset-0 z-40" 
+                                className="fixed inset-0 z-40 bg-black/50" 
                                 onClick={() => setIsEditingNote(false)}
                             />
                             <div 
@@ -213,7 +234,8 @@ function SavedPostItem({
                                             setIsEditingNote(false);
                                         }}
                                         disabled={isSaving}
-                                        className="flex-1 px-3 py-2 bg-[#26405e] text-white text-xs font-semibold rounded hover:bg-[#2f4d6f] transition-colors disabled:opacity-50"
+                                        className="rounded w-full bg-[linear-gradient(to_bottom_right,#146FCF,#0A3869)] px-4 py-2 text-xs text-white 
+                                        hover:bg-[linear-gradient(to_bottom_right,#146FCF,#146FCF)] transition-colors disabled:opacity-50"
                                     >
                                         {isSaving ? 'Saving...' : 'Save'}
                                     </button>
@@ -230,10 +252,10 @@ function SavedPostItem({
                     )}
                 </div>
 
-                <Dropdown>
+                <Dropdown panelClassName="!w-[130px]"> 
                     <button
                         onClick={onAddTags}
-                        className="block w-full px-4 py-2 text-left text-[15px] flex items-center gap-2 transition-colors hover:bg-white/10"
+                        className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 transition-colors hover:bg-white/10"
                         role="menuitem"
                     >
                         <img src={editIcon} alt="Edit" className="w-[13px] h-[13px]" />
@@ -241,17 +263,17 @@ function SavedPostItem({
                     </button>
 
                     <button
-                        
-                        className="block w-full px-4 py-2 text-left text-[15px] flex items-center gap-2 transition-colors hover:bg-white/10"
+                        onClick={onPinToggle}
+                        className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 transition-colors hover:bg-white/10"
                         role="menuitem"
                     >
                         <img src={pinIcon} alt="Pin" className="w-[13px] h-[13px]" />
-                        Pin Tab
+                        {isPinned ? 'Unpin Tab' : 'Pin Tab'}
                     </button>
                     <hr className="my-0 mx-4 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
                     <button
                         onClick={onDelete}
-                        className="block w-full px-4 py-2 text-left text-[15px] flex items-center gap-2 text-[#DB2525] transition-colors hover:bg-white/10"
+                        className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 text-[#DB2525] transition-colors hover:bg-white/10"
                         role="menuitem"
                     >
                         <img src={deleteIcon} alt="Delete" className="w-[13px] h-[13px]" />
@@ -272,9 +294,8 @@ function EmptyState() {
     );
 }
 
-/**
- * Get the 5 most recently used tags from all posts
- */
+/* Get the 5 most recently used tags from all posts */
+/*------------------------------------------------------------------------------------------------------------------------------------- */
 function getRecentTags(posts: any[]): string[] {
     const tagUsage: Map<string, string> = new Map(); // tag -> most recent updated_at
 
@@ -371,7 +392,7 @@ function TagEditModal({
     const website = new URL(post.url).hostname.replace('www.', '');
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center " onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50" onClick={onClose}>
             <div
                 className="w-[85%] max-w-md rounded-lg bg-[#1A1A1A] border-[1px] border-[rgba(255,255,255,.15)] p-4 shadow-xl shadow-black/30"
                 onClick={(e) => e.stopPropagation()}
@@ -457,7 +478,9 @@ function TagEditModal({
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={handleTagAdded}
-                        className="rounded w-full bg-[#26405e] px-4 py-2 text-sm text-white hover:bg-[#3a6ca1]"
+                        
+                        className="rounded w-full bg-[linear-gradient(to_bottom_right,#146FCF,#0A3869)] px-4 py-2 text-sm text-white 
+                        hover:bg-[linear-gradient(to_bottom_right,#146FCF,#146FCF)]"
                     >
                         Save
                     </button>
@@ -474,12 +497,11 @@ function TagEditModal({
     );
 }
 
-/**
- * Delete Confirmation Modal
- */
+/* Delete Confirmation Modal */
+/*------------------------------------------------------------------------------------------------------------------------------------- */
 function DeleteConfirmModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50" onClick={onClose}>
             <div
                 className="w-[320px] rounded-lg bg-[#1A1A1A] border border-[rgba(255,255,255,.15)] p-6 shadow-xl shadow-black/30"
                 onClick={(e) => e.stopPropagation()}
@@ -506,26 +528,32 @@ function DeleteConfirmModal({ onClose, onConfirm }: { onClose: () => void; onCon
     );
 }
 
-/**
- * Settings Modal
- */
+/* Settings Modal */
+/*------------------------------------------------------------------------------------------------------------------------------------- */
 function SettingsModal({ 
     onClose, 
     sortBy, 
     onSortByChange, 
     sortReversed, 
-    onToggleReverse 
+    onToggleReverse,
+    onExport,
+    onImport
 }: { 
     onClose: () => void;
     sortBy: 'name' | 'date';
     onSortByChange: (sortBy: 'name' | 'date') => void;
     sortReversed: boolean;
     onToggleReverse: () => void;
+    onExport: () => void;
+    onImport: (mode: 'merge' | 'replace') => void;
 }) {
+    const [showImportDropdown, setShowImportDropdown] = React.useState(false);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+        <div className="fixed inset-0 z-50 backdrop-blur-[10px] bg-black/50" onClick={onClose}>
             <div
-                className="w-[85%] rounded-lg bg-[#1A1A1A] border border-[rgba(255,255,255,.15)] p-4 shadow-xl shadow-black/30"
+                className="absolute top-[46px] left-[14px] w-[90%] rounded-lg bg-[#1A1A1A] border 
+                border-[rgba(255,255,255,.15)] p-4 shadow-xl shadow-black/50"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-3 mb-4">
@@ -533,10 +561,11 @@ function SettingsModal({
                     <h2 className="text-white text-[20px] font-bold">Settings</h2>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                    <label className="text-white/60 text-base text-[14px]">Sort By:</label>
+                {/* Sort By Section */}
+                <div className="flex items-center gap-2 mb-4">
+                    <label className="text-white/60 text-base text-[14px] pr-1">Sort By:</label>
                     <div className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
-                    border border-[rgba(255,255,255,.15)] h-[38px]">
+                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]">
                         <button
                             onClick={() => onSortByChange('name')}
                             className={`px-4 py-1 rounded-full text-[13px] font-medium transition-all ${
@@ -577,11 +606,79 @@ function SettingsModal({
                         </button>
                     </div>
                 </div>
+
+                {/* Data Section */}
+                <div className="flex items-center gap-2">
+                    <label className="text-white/60 text-base text-[14px] pr-5">Data:</label>
+                    <div className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
+                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]">
+                        {/* Export Button */}
+                        <button
+                            onClick={onExport}
+                            className="w-[110px] px-4 py-1 bg-[rgba(0,0,0,.4)] rounded-full text-[13px] font-medium text-white/80 hover:text-white 
+                            hover:bg-[rgba(255,255,255,.1)] transition-all justify-center"
+                        >
+                            Export
+                        </button>
+
+                        {/* Import Button with Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowImportDropdown(!showImportDropdown)}
+                                className="w-[110px] flex items-center gap-1 px-4 py-1  bg-[rgba(0,0,0,.4)] rounded-full text-[13px] 
+                                font-medium text-white/80 hover:text-white hover:bg-[rgba(255,255,255,.1)] transition-all justify-center"
+                            >
+                                Import
+                                <svg 
+                                    className={`w-3 h-3 transition-transform ${showImportDropdown ? 'rotate-180' : ''}`}
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showImportDropdown && (
+                                <>
+                                    {/* Backdrop to close dropdown */}
+                                    <div 
+                                        className="fixed inset-0 z-40" 
+                                        onClick={() => setShowImportDropdown(false)}
+                                    />
+                                    <div className="absolute top-full mt-2 right-0 w-[120px] bg-[#1A1A1A] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl z-50 overflow-hidden">
+                                        <button
+                                            onClick={() => {
+                                                setShowImportDropdown(false);
+                                                onImport('merge');
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-[13px] text-white/80 hover:bg-[rgba(255,255,255,.1)] hover:text-white transition-colors"
+                                        >
+                                            Merge
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowImportDropdown(false);
+                                                onImport('replace');
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-[13px] text-white/80 hover:bg-[rgba(255,255,255,.1)] hover:text-white transition-colors"
+                                        >
+                                            Replace
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
 }
 
+/* Popup App */
+/*------------------------------------------------------------------------------------------------------------------------------------- */
 export default function PopupApp() {
     enum SaveStatus {
         Idle = 'idle',
@@ -590,6 +687,8 @@ export default function PopupApp() {
         AlreadyExists = 'already_exists',
         Error = 'error',
     }
+
+    type ViewMode = 'list' | 'folder';
 
     const [posts, setPosts] = useState<any[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
@@ -605,6 +704,50 @@ export default function PopupApp() {
     const [sortReversed, setSortReversed] = useState<boolean>(false);
     const [popupHeight, setPopupHeight] = useState<number>(240);
     const [isResizing, setIsResizing] = useState<boolean>(false);
+
+    // Folder state
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [folders, setFolders] = useState<Folder[]>([]);
+    const [filteredFolders, setFilteredFolders] = useState<Folder[]>([]);
+    const [createFolderModalOpen, setCreateFolderModalOpen] = useState<boolean>(false);
+    const [editFolderModalOpen, setEditFolderModalOpen] = useState<boolean>(false);
+    const [manageTabsModalOpen, setManageTabsModalOpen] = useState<boolean>(false);
+    const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+    const [manageTabsMode, setManageTabsMode] = useState<'add' | 'remove'>('add');
+
+    // Pinned tabs state
+    const [pinnedTabIds, setPinnedTabIds] = useState<Post[]>([]);
+
+    // Confirm modal state
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        type: ConfirmModalType;
+        title: string;
+        message: string;
+        confirmText?: string;
+        cancelText?: string;
+        denyText?: string;
+        showCancel?: boolean;
+        showDeny?: boolean;
+        onConfirm: () => void;
+        onCancel?: () => void;
+        onDeny?: () => void;
+        autoCloseDelay?: number;
+    }>({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        onConfirm: () => {},
+    });
+
+    const showConfirmModal = (config: Omit<typeof confirmModal, 'isOpen'>) => {
+        setConfirmModal({ ...config, isOpen: true });
+    };
+
+    const closeConfirmModal = () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    };
 
     const buttonTextMap: Record<SaveStatus, string> = {
         [SaveStatus.Idle]: 'Save Current Tab',
@@ -624,28 +767,68 @@ export default function PopupApp() {
         setFilteredPosts(allPosts);
     };
 
+    const fetchFolders = async () => {
+        try {
+        const allFolders = await StorageManager.getAllFolders();
+            // Ensure all folders have the posts array
+            const normalizedFolders = allFolders.map(folder => ({
+                ...folder,
+                posts: folder.posts || [],
+            }));
+            setFolders(normalizedFolders);
+            setFilteredFolders(normalizedFolders);
+        } catch (error) {
+            console.error('Error fetching folders:', error);
+            setFolders([]);
+            setFilteredFolders([]);
+        }
+    };
+
+    const fetchPinnedTabs = async () => {
+        try {
+        const pinned = await StorageManager.getPinnedTabs();
+            // Ensure pinned is always an array
+            setPinnedTabIds(Array.isArray(pinned) ? pinned : []);
+        } catch (error) {
+            console.error('Error fetching pinned tabs:', error);
+            setPinnedTabIds([]);
+        }
+    };
+
     useEffect(() => {
         fetchPosts();
+        fetchFolders();
+        fetchPinnedTabs();
         
-        // Load saved popup height
-        chrome.storage.local.get(['popupHeight'], (result) => {
+        // Load saved popup height and view mode
+        chrome.storage.local.get(['popupHeight', 'viewMode'], (result) => {
             if (result.popupHeight) {
                 setPopupHeight(result.popupHeight);
+            }
+            if (result.viewMode) {
+                setViewMode(result.viewMode as ViewMode);
             }
         });
     }, []);
 
-    // Filter posts based on search query using StorageManager
+    // Helper function to change view mode and persist it
+    const changeViewMode = (mode: ViewMode) => {
+        setViewMode(mode);
+        chrome.storage.local.set({ viewMode: mode });
+    };
+
+    // Filter posts and folders based on search query
     useEffect(() => {
         const performSearch = async () => {
-            let filtered = posts;
+            // Filter posts
+            let filteredPostsResult = posts;
             
             if (searchQuery.trim()) {
-                filtered = await StorageManager.searchPosts(searchQuery);
+                filteredPostsResult = await StorageManager.searchPosts(searchQuery);
             }
 
-            // Apply sorting
-            const sorted = [...filtered].sort((a, b) => {
+            // Apply sorting to posts
+            const sortedPosts = [...filteredPostsResult].sort((a, b) => {
                 if (sortBy === 'name') {
                     const comparison = a.title.localeCompare(b.title);
                     return sortReversed ? -comparison : comparison;
@@ -658,11 +841,37 @@ export default function PopupApp() {
                 }
             });
 
-            setFilteredPosts(sorted);
+            setFilteredPosts(sortedPosts);
+
+            // Filter folders (by name only)
+            let filteredFoldersResult = folders;
+            
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                filteredFoldersResult = folders.filter(folder => 
+                    folder.name.toLowerCase().includes(query)
+                );
+            }
+
+            // Apply sorting to folders
+            const sortedFolders = [...filteredFoldersResult].sort((a, b) => {
+                if (sortBy === 'name') {
+                    const comparison = a.name.localeCompare(b.name);
+                    return sortReversed ? -comparison : comparison;
+                } else {
+                    // Sort by date (updated_at or created_at)
+                    const dateA = new Date(a.updated_at || a.created_at).getTime();
+                    const dateB = new Date(b.updated_at || b.created_at).getTime();
+                    const comparison = dateB - dateA; // Most recent first by default
+                    return sortReversed ? -comparison : comparison;
+                }
+            });
+
+            setFilteredFolders(sortedFolders);
         };
 
         performSearch();
-    }, [searchQuery, posts, sortBy, sortReversed]);
+    }, [searchQuery, posts, folders, sortBy, sortReversed]);
 
     // Handle resize drag
     const handleResizeStart = (e: React.MouseEvent) => {
@@ -763,11 +972,12 @@ export default function PopupApp() {
             await fetchPosts();
         } catch (error) {
             console.error('Failed to update tags:', error);
-            Swal.fire({
-                icon: 'error',
+            showConfirmModal({
+                type: 'error',
                 title: 'Update Failed',
-                text: 'Could not update tags. Please try again.',
-                confirmButtonColor: '#26405e',
+                message: 'Could not update tags. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
             });
         }
     };
@@ -778,11 +988,12 @@ export default function PopupApp() {
             await fetchPosts();
         } catch (error) {
             console.error('Failed to update note:', error);
-            Swal.fire({
-                icon: 'error',
+            showConfirmModal({
+                type: 'error',
                 title: 'Update Failed',
-                text: 'Could not update note. Please try again.',
-                confirmButtonColor: '#26405e',
+                message: 'Could not update note. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
             });
         }
     };
@@ -796,6 +1007,13 @@ export default function PopupApp() {
         if (!postToDelete) return;
 
         try {
+            // Check if post is pinned and unpin it
+            const isPinned = await StorageManager.isPinned(postToDelete);
+            if (isPinned) {
+                await StorageManager.unpinTab(postToDelete);
+                await fetchPinnedTabs();
+            }
+
             await StorageManager.deletePost(postToDelete);
             setPosts((prev) => prev.filter((p) => p.id !== postToDelete));
             setDeleteModalOpen(false);
@@ -805,52 +1023,423 @@ export default function PopupApp() {
             setDeleteModalOpen(false);
             setPostToDelete(null);
 
-            Swal.fire({
-                icon: 'error',
+            showConfirmModal({
+                type: 'error',
                 title: 'Deletion Failed',
-                text: 'Could not delete Post. Please try again.',
-                background: '#1A1A1A',
-                color: '#fff',
-                confirmButtonColor: '#26405e',
-                customClass: {
-                    popup: 'border border-[rgba(255,255,255,.15)]',
-                },
+                message: 'Could not delete Post. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
             });
         }
     };
 
     const handleDeleteAllPosts = async () => {
-        const result = await Swal.fire({
-            title: 'Are you sure you want to delete all posts?',
-            text: 'You will loose all your data!',
-            icon: 'warning',
-            width: '80%',
-            background: '#d8edfd',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#26405e',
-            confirmButtonText: 'Yes, delete it!',
-            focusCancel: true,
-            customClass: {
-                icon: 'big-success-icon',
-            },
-        });
-
-        if (result.isConfirmed) {
+        showConfirmModal({
+            type: 'warning',
+            title: 'Delete All Posts?',
+            message: 'You will lose all your data! This cannot be undone.',
+            confirmText: 'Yes, delete all!',
+            cancelText: 'Cancel',
+            showCancel: true,
+            onConfirm: async () => {
+                closeConfirmModal();
             try {
                 await StorageManager.deleteAllPosts();
+                // Clear all pinned tabs since all posts are deleted
+                await StorageManager.reorderPinnedTabs([]);
                 await fetchPosts();
+                await fetchPinnedTabs();
             } catch (err) {
                 console.error('Failed to delete all posts:', err);
-
-                Swal.fire({
-                    icon: 'error',
+                    showConfirmModal({
+                        type: 'error',
                     title: 'Deletion Failed',
-                    text: 'Could not posts. Please try again.',
-                    confirmButtonColor: '#26405e',
+                        message: 'Could not delete posts. Please try again.',
+                        confirmText: 'OK',
+                        onConfirm: closeConfirmModal,
                 });
             }
+            },
+            onCancel: closeConfirmModal,
+        });
+    };
+
+    // ==================== Folder Handlers ====================
+
+    const handleCreateFolder = async (name: string, color: string, addAllOpenTabs?: boolean) => {
+        try {
+            let postIds: string[] = [];
+            
+            // If user wants to add all open tabs, get them first
+            if (addAllOpenTabs) {
+                const tabs = await chrome.tabs.query({ currentWindow: true });
+                const validTabs = tabs.filter(tab => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'));
+                
+                // Save each tab as a post if not already saved
+                const savedPosts = await Promise.all(
+                    validTabs.map(async (tab) => {
+                        if (tab.url && tab.title) {
+                            const result = await StorageManager.savePost(tab.url, tab.title, [], tab.favIconUrl);
+                            return result.post.id;
+                        }
+                        return null;
+                    })
+                );
+                
+                postIds = savedPosts.filter((id): id is string => id !== null);
+                
+                // Refresh posts list if we added any
+                if (postIds.length > 0) {
+                    await fetchPosts();
+                }
+            }
+            
+            const result = await StorageManager.saveFolder(name, color, postIds);
+            if (result.wasDuplicate) {
+                showConfirmModal({
+                    type: 'info',
+                    title: 'Folder Already Exists',
+                    message: `A folder named "${name}" already exists.`,
+                    confirmText: 'OK',
+                    onConfirm: closeConfirmModal,
+                });
+            } else if (addAllOpenTabs && postIds.length > 0) {
+                showConfirmModal({
+                    type: 'success',
+                    title: 'Folder Created',
+                    message: `Folder "${name}" created with ${postIds.length} tab${postIds.length === 1 ? '' : 's'}.`,
+                    confirmText: 'OK',
+                    onConfirm: closeConfirmModal,
+                    autoCloseDelay: 2000,
+                });
+            }
+            await fetchFolders();
+        } catch (error) {
+            console.error('Failed to create folder:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Creation Failed',
+                message: 'Could not create folder. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
         }
+    };
+
+    const handleEditFolder = async (name: string, color: string) => {
+        if (!selectedFolder) return;
+        
+        try {
+            await StorageManager.updateFolder(selectedFolder.id, { name, color });
+            await fetchFolders();
+        } catch (error) {
+            console.error('Failed to update folder:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Update Failed',
+                message: 'Could not update folder. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        }
+    };
+
+    const handleDeleteFolder = async (folderId: string) => {
+        showConfirmModal({
+            type: 'warning',
+            title: 'Delete Folder',
+            message: 'Do you want to delete the folder only or also delete all tabs inside?',
+            confirmText: 'Delete Folder Only',
+            denyText: 'Delete Folder & Tabs',
+            cancelText: 'Cancel',
+            showCancel: true,
+            showDeny: true,
+            onConfirm: async () => {
+                closeConfirmModal();
+            // Delete folder only
+            try {
+                await StorageManager.deleteFolder(folderId, false);
+                await fetchFolders();
+            } catch (error) {
+                console.error('Failed to delete folder:', error);
+                    showConfirmModal({
+                        type: 'error',
+                    title: 'Deletion Failed',
+                        message: 'Could not delete folder. Please try again.',
+                        confirmText: 'OK',
+                        onConfirm: closeConfirmModal,
+                });
+            }
+            },
+            onDeny: async () => {
+                closeConfirmModal();
+            // Delete folder and all posts
+            try {
+                // Get folder posts to unpin them if needed
+                const folder = folders.find(f => f.id === folderId);
+                if (folder) {
+                    // Unpin any posts in this folder
+                        for (const post of folder.posts) {
+                            const isPinned = await StorageManager.isPinned(post.id);
+                        if (isPinned) {
+                                await StorageManager.unpinTab(post.id);
+                        }
+                    }
+                }
+                
+                await StorageManager.deleteFolder(folderId, true);
+                await fetchFolders();
+                await fetchPosts();
+                await fetchPinnedTabs();
+            } catch (error) {
+                console.error('Failed to delete folder and posts:', error);
+                    showConfirmModal({
+                        type: 'error',
+                    title: 'Deletion Failed',
+                        message: 'Could not delete folder and tabs. Please try again.',
+                        confirmText: 'OK',
+                        onConfirm: closeConfirmModal,
+                });
+            }
+            },
+            onCancel: closeConfirmModal,
+        });
+    };
+
+    const handleOpenAllTabsInFolder = async (folderId: string) => {
+        try {
+            const posts = await StorageManager.getPostsByFolderId(folderId);
+            
+            if (posts.length === 0) {
+                showConfirmModal({
+                    type: 'info',
+                    title: 'Folder is Empty',
+                    message: 'This folder has no tabs to open.',
+                    confirmText: 'OK',
+                    onConfirm: closeConfirmModal,
+                });
+                return;
+            }
+
+            // Open all tabs
+            for (let i = 0; i < posts.length; i++) {
+                const post = posts[i];
+                if (post) {
+                    await chrome.tabs.create({ 
+                        url: post.url, 
+                        active: i === 0 // Make first tab active
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to open tabs:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Failed to Open Tabs',
+                message: 'Could not open tabs. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        }
+    };
+
+    const handleAddTabsToFolder = async (postIds: string[]) => {
+        if (!selectedFolder) return;
+
+        try {
+            for (const postId of postIds) {
+                await StorageManager.addPostToFolder(selectedFolder.id, postId);
+            }
+            await fetchFolders();
+        } catch (error) {
+            console.error('Failed to add tabs to folder:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Failed to Add Tabs',
+                message: 'Could not add tabs to folder. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        }
+    };
+
+    const handleRemoveTabsFromFolder = async (postIds: string[]) => {
+        if (!selectedFolder) return;
+
+        try {
+            for (const postId of postIds) {
+                await StorageManager.removePostFromFolder(selectedFolder.id, postId);
+            }
+            await fetchFolders();
+        } catch (error) {
+            console.error('Failed to remove tabs from folder:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Failed to Remove Tabs',
+                message: 'Could not remove tabs from folder. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        }
+    };
+
+    const handleChangeColor = async (color: string) => {
+        if (!selectedFolder) return;
+
+        try {
+            await StorageManager.updateFolder(selectedFolder.id, { color });
+            await fetchFolders();
+            // Close the manage tabs modal and show a simple confirmation
+            setManageTabsModalOpen(false);
+        } catch (error) {
+            console.error('Failed to change folder color:', error);
+        }
+    };
+
+    // ==================== Pinned Tabs Handlers ====================
+
+    const handlePinTab = async (postId: string) => {
+        try {
+            const success = await StorageManager.pinTab(postId);
+            if (!success) {
+                showConfirmModal({
+                    type: 'info',
+                    title: 'Maximum Pins Reached',
+                    message: 'You can only pin up to 5 tabs at a time.',
+                    confirmText: 'OK',
+                    onConfirm: closeConfirmModal,
+                });
+            }
+            await fetchPinnedTabs();
+        } catch (error) {
+            console.error('Failed to pin tab:', error);
+        }
+    };
+
+    const handleUnpinTab = async (postId: string) => {
+        try {
+            await StorageManager.unpinTab(postId);
+            await fetchPinnedTabs();
+        } catch (error) {
+            console.error('Failed to unpin tab:', error);
+        }
+    };
+
+    const handleReorderPinnedTabs = async (newOrder: Post[]) => {
+        try {
+            await StorageManager.reorderPinnedTabs(newOrder);
+            await fetchPinnedTabs();
+        } catch (error) {
+            console.error('Failed to reorder pinned tabs:', error);
+        }
+    };
+
+    // ==================== Import/Export Handlers ====================
+
+    const handleExportData = async () => {
+        try {
+            const jsonData = await StorageManager.exportData();
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Create a temporary download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recally-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showConfirmModal({
+                type: 'success',
+                title: 'Export Successful',
+                message: 'Your data has been exported successfully.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        } catch (error) {
+            console.error('Export failed:', error);
+            showConfirmModal({
+                type: 'error',
+                title: 'Export Failed',
+                message: 'Could not export data. Please try again.',
+                confirmText: 'OK',
+                onConfirm: closeConfirmModal,
+            });
+        }
+    };
+
+    const handleImportData = async (mode: 'merge' | 'replace') => {
+        // Create a file input element
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            const file = target.files?.[0];
+            
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                
+                // Show confirmation dialog
+                showConfirmModal({
+                    type: 'warning',
+                    title: mode === 'merge' ? 'Merge Data?' : 'Replace All Data?',
+                    message: mode === 'merge' 
+                        ? 'This will add the imported data to your existing data.'
+                        : 'This will delete all your current data and replace it with the imported data. This cannot be undone!',
+                    confirmText: mode === 'merge' ? 'Merge' : 'Replace All',
+                    cancelText: 'Cancel',
+                    showCancel: true,
+                    onConfirm: async () => {
+                        closeConfirmModal();
+                        try {
+                // Perform the import
+                await StorageManager.importData(text, mode);
+                
+                // Refresh all data
+                await fetchPosts();
+                await fetchFolders();
+                await fetchPinnedTabs();
+
+                            showConfirmModal({
+                                type: 'success',
+                    title: 'Import Successful',
+                                message: `Your data has been ${mode === 'merge' ? 'merged' : 'replaced'} successfully.`,
+                                confirmText: 'OK',
+                                onConfirm: closeConfirmModal,
+                            });
+                        } catch (importError) {
+                            console.error('Import failed:', importError);
+                            showConfirmModal({
+                                type: 'error',
+                                title: 'Import Failed',
+                                message: importError instanceof Error ? importError.message : 'Could not import data. Please check the file format.',
+                                confirmText: 'OK',
+                                onConfirm: closeConfirmModal,
+                            });
+                        }
+                    },
+                    onCancel: closeConfirmModal,
+                });
+            } catch (error) {
+                console.error('Import failed:', error);
+                showConfirmModal({
+                    type: 'error',
+                    title: 'Import Failed',
+                    message: error instanceof Error ? error.message : 'Could not import data. Please check the file format.',
+                    confirmText: 'OK',
+                    onConfirm: closeConfirmModal,
+                });
+            }
+        };
+
+        // Trigger file picker
+        input.click();
     };
 
     const buttonClasses = [
@@ -874,7 +1463,7 @@ export default function PopupApp() {
     return (
         <>
         <div 
-            className="w-[380px] bg-[radial-gradient(circle_at_top_left,#202020,#1C3041)] 
+            className="w-[380px] bg-[radial-gradient(circle_at_top_left,#202020,#1A1A1A)]
             font-sans text-[#26405e] rounded-[0px] relative flex flex-col"
             style={{ height: `${popupHeight}px` }}
         >
@@ -883,9 +1472,11 @@ export default function PopupApp() {
                 {/* Recally Button */}
                 <button 
                     onClick={() => setSettingsModalOpen(true)}
-                    className="min-w-[30px] min-h-[30px] max-w-[38px] max-h-[38px] p-[5px] bg-[radial-gradient(circle_at_top_left,#002C5A,#1F2B37)]  
+                    className={`min-w-[30px] min-h-[30px] max-w-[38px] max-h-[38px] p-[5px] bg-[radial-gradient(circle_at_top_left,#002C5A,#1F2B37)]  
                     rounded-full flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px]
-                    hover:bg-[radial-gradient(circle_at_top_left,#293f57,#27476b)]"
+                    hover:bg-[radial-gradient(circle_at_top_left,#293f57,#27476b)] ${
+                        settingsModalOpen ? 'relative z-[60]' : ''
+                    }`}
                 >
                     <img src={recallyIcon} alt="Recally icon" className="w-[16px] h-[16px]" />
                 </button>
@@ -907,25 +1498,84 @@ export default function PopupApp() {
                     />
                 </div>
 
-                {/* Save Button */}
+                {/* Save Tab Button (List View) / Create Folder Button (Folder View) */}
                 <div className="flex items-center gap-2"></div>
-                <button className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#0A4582,#002C5A)] 
-                text-white rounded-[19px] flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px] 
-                hover:bg-[radial-gradient(circle_at_top_left,#0A4582,#0A4582) ] 
-                text-[14px] font-regular" onClick={handleSaveClick} disabled={notIdle}>
-                    {"Save Tab"}
-                </button>
+                {viewMode === 'list' ? (
+                    <button 
+                        className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#0A4582,#002C5A)] 
+                        text-white rounded-[19px] flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px] 
+                        hover:bg-[radial-gradient(circle_at_top_left,#0A4582,#0A4582)] 
+                        text-[14px] font-regular" 
+                        onClick={handleSaveClick} 
+                        disabled={notIdle}
+                    >
+                        Save Tab
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => setCreateFolderModalOpen(true)}
+                        className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#5c990b,#b8d419)] 
+                        text-white rounded-[19px] flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px] 
+                        hover:bg-[radial-gradient(circle_at_top_left,#b8d419,#b8d419)] 
+                        text-[14px] font-regular"
+                        title="Create New Folder"
+                    >
+                        + Folder
+                    </button>
+                )}
             </header>
 
             <hr className="mt-0 mb-2 mx-3 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
             
-            {/* Utility Bar 01 - List and Folder */}
+            {/* Pinned tabs Bar 01 and List and Folder */}
             <div className="mx-3 mb-2 flex items-center gap-1.5">
-                <div className="bg-[rgba(255,255,255,.1)] rounded-full p-1 w-full h-[24px] flex items-center justify-center"></div>
-                <button className="min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] bg-[#146FCF] rounded-full flex items-center justify-center"> 
-                    <img src={listIcon} alt="List icon" className="size-[10px] m-1 opacity-80" /></button>
-                <button className="min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] bg-[rgba(255,255,255,.25)] rounded-full flex items-center justify-center">
-                    <img src={folderIcon} alt="Grid icon" className="size-[15px] m-1 opacity-50" /></button>
+                <PinnedTabsBar
+                    pinnedTabIds={pinnedTabIds}
+                    posts={posts}
+                    onUnpin={handleUnpinTab}
+                    onReorder={handleReorderPinnedTabs}
+                    onTabClick={(url) => chrome.tabs.create({ url })}
+                />
+                
+                {/* List View Button */}
+                <button 
+                    onClick={() => changeViewMode('list')}
+                    className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
+                        viewMode === 'list' 
+                            ? '' 
+                            : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
+                    }`}
+                    style={viewMode === 'list' ? {
+                        background: 'linear-gradient(to bottom, #146FCF, #0A3869)'
+                    } : {}}
+                    title="List View"
+                > 
+                    <img 
+                        src={listIcon} 
+                        alt="List Button" 
+                        className={`size-[10px] m-1 ${viewMode === 'list' ? 'opacity-80' : 'opacity-50'}`} 
+                    />
+                </button>
+                
+                {/* Folder View Button */}
+                <button 
+                    onClick={() => changeViewMode('folder')}
+                    className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
+                        viewMode === 'folder' 
+                            ? '' 
+                            : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
+                    }`}
+                    style={viewMode === 'folder' ? {
+                        background: 'linear-gradient(to bottom,rgb(184, 212, 25),rgb(92, 153, 11))'
+                    } : {}}
+                    title="Folder View"
+                >
+                    <img 
+                        src={folderIcon} 
+                        alt="Folder Button" 
+                        className={`size-[15px] m-1 ${viewMode === 'folder' ? 'opacity-80' : 'opacity-50'}`} 
+                    />
+                </button>
             </div>
 
             {/* Scrollable List Area Only */}
@@ -937,28 +1587,162 @@ export default function PopupApp() {
                     paddingRight: '12px',
                 } as React.CSSProperties}
             >
-                <ul className="m-0 list-none flex flex-col gap-2">
-                {filteredPosts.length === 0 ? (
-                    searchQuery.trim() ? (
-                        <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
-                            <p>No posts found matching "{searchQuery}"</p>
-                        </div>
+                {/* List View */}
+                {viewMode === 'list' && (
+                    <ul className="m-0 list-none flex flex-col gap-2">
+                    {filteredPosts.length === 0 ? (
+                        searchQuery.trim() ? (
+                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                <p>No posts found matching "{searchQuery}"</p>
+                            </div>
+                        ) : (
+                            <EmptyState />
+                        )
                     ) : (
-                        <EmptyState />
-                    )
-                ) : (
-                    filteredPosts.map((post: any) => (
-                        <SavedPostItem
-                            key={post.id}
-                            post={post}
-                            isHighlighted={existingPostId === post.id}
-                            onDelete={() => handleDeletePost(post.id)}
-                            onAddTags={() => handleAddTags(post)}
-                            onSaveNote={(noteText) => handleSaveNote(post.id, noteText)}
-                        />
-                    ))
+                        filteredPosts.map((post: any) => {
+                            const isPinned = pinnedTabIds.some(p => p.id === post.id);
+                            return (
+                                <SavedPostItem
+                                    key={post.id}
+                                    post={post}
+                                    isHighlighted={existingPostId === post.id}
+                                    onDelete={() => handleDeletePost(post.id)}
+                                    onAddTags={() => handleAddTags(post)}
+                                    onSaveNote={(noteText) => handleSaveNote(post.id, noteText)}
+                                    onPinToggle={() => {
+                                        if (isPinned) {
+                                            handleUnpinTab(post.id);
+                                        } else {
+                                            handlePinTab(post.id);
+                                        }
+                                    }}
+                                    isPinned={isPinned}
+                                />
+                            );
+                        })
+                    )}
+                    </ul>
                 )}
-                </ul>
+
+                {/* Folder View */}
+                {viewMode === 'folder' && (
+                    <ul className="m-0 list-none flex flex-col gap-2">
+                    {filteredFolders.length === 0 ? (
+                        searchQuery.trim() ? (
+                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                <p>No folders found matching "{searchQuery}"</p>
+                            </div>
+                        ) : folders.length === 0 ? (
+                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                <p>No folders yet.</p>
+                                <button
+                                    onClick={() => setCreateFolderModalOpen(true)}
+                                    className="mt-2 px-4 py-2 bg-[#26405e] text-white text-sm rounded-full hover:bg-[#3a6ca1] transition-colors"
+                                >
+                                    Create Your First Folder
+                                </button>
+                            </div>
+                        ) : null
+                    ) : (
+                        filteredFolders.map((folder) => {
+                            // Get posts for this folder
+                            // No need to filter - folder already contains full Post objects
+                            const folderPosts = folder.posts;
+
+                            return (
+                                <SavedFolderItem
+                                    key={folder.id}
+                                    folder={folder}
+                                    posts={folderPosts}
+                                    onDelete={() => handleDeleteFolder(folder.id)}
+                                    onEdit={() => {
+                                        setSelectedFolder(folder);
+                                        setEditFolderModalOpen(true);
+                                    }}
+                                    onOpenAllTabs={() => handleOpenAllTabsInFolder(folder.id)}
+                                    onAddTab={() => {
+                                        setSelectedFolder(folder);
+                                        setManageTabsMode('add');
+                                        setManageTabsModalOpen(true);
+                                    }}
+                                    onAddCurrentTab={async () => {
+                                        // Add current tab to this folder
+                                        try {
+                                            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                                            if (!tab?.url || !tab?.title) {
+                                                console.error('Could not get current tab info');
+                                                return;
+                                            }
+
+                                            // Save the post first (if not already saved)
+                                            const result = await StorageManager.savePost(tab.url, tab.title, [], tab.favIconUrl);
+                                            
+                                            // Add to folder
+                                            await StorageManager.addPostToFolder(folder.id, result.post.id);
+                                            await fetchFolders();
+                                            await fetchPosts();
+
+                                            /***  Show success notification
+                                            showConfirmModal({
+                                                type: 'success',
+                                                title: 'Tab Added',
+                                                message: `Added "${tab.title}" to "${folder.name}"`,
+                                                confirmText: 'OK',
+                                                onConfirm: closeConfirmModal,
+                                                autoCloseDelay: 2000,
+                                            });*/
+                                        } catch (error) {
+                                            console.error('Failed to add current tab to folder:', error);
+                                            showConfirmModal({
+                                                type: 'error',
+                                                title: 'Failed to Add Tab',
+                                                message: 'Could not add tab to folder. Please try again.',
+                                                confirmText: 'OK',
+                                                onConfirm: closeConfirmModal,
+                                            });
+                                        }
+                                    }}
+                                    onRemoveTab={() => {
+                                        setSelectedFolder(folder);
+                                        setManageTabsMode('remove');
+                                        setManageTabsModalOpen(true);
+                                    }}
+                                    onChangeColor={() => {
+                                        setSelectedFolder(folder);
+                                        setEditFolderModalOpen(true);
+                                    }}
+                                    onPostClick={(url) => chrome.tabs.create({ url })}
+                                    renderPostItem={(post) => {
+                                        const isPinned = pinnedTabIds.some((p: Post) => p.id === post.id);
+                                        return (
+                                            <CompactPostItem
+                                                key={post.id}
+                                                post={post}
+                                                onClick={() => chrome.tabs.create({ url: post.url })}
+                                                onDelete={async () => {
+                                                    // Remove post from folder
+                                                    await StorageManager.removePostFromFolder(folder.id, post.id);
+                                                    await fetchFolders();
+                                                }}
+                                                onAddTags={() => handleAddTags(post)}
+                                                onSaveNote={(noteText) => handleSaveNote(post.id, noteText)}
+                                                onPinToggle={() => {
+                                                    if (isPinned) {
+                                                        handleUnpinTab(post.id);
+                                                    } else {
+                                                        handlePinTab(post.id);
+                                                    }
+                                                }}
+                                                isPinned={isPinned}
+                                            />
+                                        );
+                                    }}
+                                />
+                            );
+                        })
+                    )}
+                    </ul>
+                )}
             </div>
             
             {/* Resize Handle - Fixed at bottom */}
@@ -1018,6 +1802,58 @@ export default function PopupApp() {
                     onSortByChange={setSortBy}
                     sortReversed={sortReversed}
                     onToggleReverse={() => setSortReversed(!sortReversed)}
+                    onExport={handleExportData}
+                    onImport={handleImportData}
+                />
+            )}
+
+            {/* Folder Modals */}
+            <CreateFolderModal
+                isOpen={createFolderModalOpen}
+                onClose={() => setCreateFolderModalOpen(false)}
+                onSave={handleCreateFolder}
+                existingFolderNames={folders.map(f => f.name)}
+            />
+
+            <EditFolderModal
+                folder={selectedFolder}
+                isOpen={editFolderModalOpen}
+                onClose={() => {
+                    setEditFolderModalOpen(false);
+                    setSelectedFolder(null);
+                }}
+                onSave={handleEditFolder}
+                existingFolderNames={folders.filter(f => f.id !== selectedFolder?.id).map(f => f.name)}
+            />
+
+            <ManageTabsModal
+                folder={selectedFolder}
+                allPosts={posts}
+                isOpen={manageTabsModalOpen}
+                onClose={() => {
+                    setManageTabsModalOpen(false);
+                    setSelectedFolder(null);
+                }}
+                onSave={manageTabsMode === 'add' ? handleAddTabsToFolder : handleRemoveTabsFromFolder}
+                mode={manageTabsMode}
+            />
+
+            {/* Confirm Modal */}
+            {confirmModal.isOpen && (
+                <ConfirmModal
+                    isOpen={true}
+                    type={confirmModal.type}
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    {...(confirmModal.confirmText && { confirmText: confirmModal.confirmText })}
+                    {...(confirmModal.cancelText && { cancelText: confirmModal.cancelText })}
+                    {...(confirmModal.denyText && { denyText: confirmModal.denyText })}
+                    {...(confirmModal.showCancel !== undefined && { showCancel: confirmModal.showCancel })}
+                    {...(confirmModal.showDeny !== undefined && { showDeny: confirmModal.showDeny })}
+                    onConfirm={confirmModal.onConfirm}
+                    {...(confirmModal.onCancel && { onCancel: confirmModal.onCancel })}
+                    {...(confirmModal.onDeny && { onDeny: confirmModal.onDeny })}
+                    {...(confirmModal.autoCloseDelay && { autoCloseDelay: confirmModal.autoCloseDelay })}
                 />
             )}
         </div>

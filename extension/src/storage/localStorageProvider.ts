@@ -1,6 +1,6 @@
 import { db } from './db';
-import type { Post } from '../../../shared';
-import type { StorageProvider, SavePostResult } from '../../../shared/';
+import type { Post, Folder } from '../../../shared';
+import type { StorageProvider, SavePostResult, SaveFolderResult } from '../../../shared/';
 import { v4 as uuidv4 } from 'uuid';
 import { getUserPreferences } from './userPreferences';
 
@@ -215,5 +215,181 @@ export const LocalStorageProvider: StorageProvider = {
 
             return titleMatch || urlMatch;
         });
+    },
+
+    // ==================== Folder Operations ====================
+
+    async saveFolder(name: string, color: string, postIds: string[] = []): Promise<SaveFolderResult> {
+        const trimmedName = name.trim();
+        
+        if (!trimmedName) {
+            throw new Error('Folder name cannot be empty');
+        }
+
+        // Check for duplicate folder names
+        const existingFolder = await db.folders
+            .where('name')
+            .equalsIgnoreCase(trimmedName)
+            .first();
+
+        if (existingFolder) {
+            return {
+                folder: existingFolder,
+                wasDuplicate: true,
+            };
+        }
+
+        // Fetch full Post objects for the provided IDs
+        const posts = await Promise.all(
+            postIds.map(async (postId) => await db.posts.get(postId))
+        );
+        const validPosts = posts.filter((post): post is Post => post !== undefined);
+
+        const now = new Date().toISOString();
+        const folder: Folder = {
+            id: uuidv4(),
+            name: trimmedName,
+            color,
+            posts: validPosts, // Store full Post objects
+            created_at: now,
+            updated_at: now,
+            order: Date.now(), // Use timestamp for initial ordering
+        };
+
+        await db.folders.put(folder);
+        return {
+            folder,
+            wasDuplicate: false,
+        };
+    },
+
+    async updateFolder(id: string, updates: Partial<Omit<Folder, 'id' | 'created_at'>>): Promise<Folder> {
+        const folder = await db.folders.get(id);
+        if (!folder) {
+            throw new Error(`Folder with id ${id} not found`);
+        }
+
+        // If name is being updated, check for duplicates
+        if (updates.name && updates.name.trim() !== folder.name) {
+            const duplicate = await db.folders
+                .where('name')
+                .equalsIgnoreCase(updates.name.trim())
+                .first();
+            
+            if (duplicate && duplicate.id !== id) {
+                throw new Error('A folder with this name already exists');
+            }
+        }
+
+        const updatedFolder: Folder = {
+            ...folder,
+            ...updates,
+            name: updates.name?.trim() || folder.name,
+            updated_at: new Date().toISOString(),
+        };
+
+        await db.folders.put(updatedFolder);
+        return updatedFolder;
+    },
+
+    async deleteFolder(id: string, deleteContainedPosts: boolean = false): Promise<void> {
+        const folder = await db.folders.get(id);
+        if (!folder) {
+            throw new Error(`Folder with id ${id} not found`);
+        }
+
+        // If deleteContainedPosts is true, delete all posts in the folder from the main posts table
+        if (deleteContainedPosts && folder.posts.length > 0) {
+            await Promise.all(
+                folder.posts.map((post) => db.posts.delete(post.id))
+            );
+        }
+
+        await db.folders.delete(id);
+    },
+
+    async getAllFolders(): Promise<Folder[]> {
+        return db.folders.orderBy('order').toArray();
+    },
+
+    // ==================== Folder-Post Operations ====================
+
+    async addPostToFolder(folderId: string, postId: string): Promise<Folder> {
+        const folder = await db.folders.get(folderId);
+        if (!folder) {
+            throw new Error(`Folder with id ${folderId} not found`);
+        }
+
+        const post = await db.posts.get(postId);
+        if (!post) {
+            throw new Error(`Post with id ${postId} not found`);
+        }
+
+        // Check if post is already in folder
+        if (folder.posts.some((p) => p.id === postId)) {
+            return folder; // Already added, no change needed
+        }
+
+        const updatedFolder: Folder = {
+            ...folder,
+            posts: [...folder.posts, post], // Add full Post object
+            updated_at: new Date().toISOString(),
+        };
+
+        await db.folders.put(updatedFolder);
+        return updatedFolder;
+    },
+
+    async removePostFromFolder(folderId: string, postId: string): Promise<Folder> {
+        const folder = await db.folders.get(folderId);
+        if (!folder) {
+            throw new Error(`Folder with id ${folderId} not found`);
+        }
+
+        const updatedFolder: Folder = {
+            ...folder,
+            posts: folder.posts.filter((post) => post.id !== postId),
+            updated_at: new Date().toISOString(),
+        };
+
+        await db.folders.put(updatedFolder);
+        return updatedFolder;
+    },
+
+    async getPostsByFolderId(folderId: string): Promise<Post[]> {
+        const folder = await db.folders.get(folderId);
+        if (!folder) {
+            throw new Error(`Folder with id ${folderId} not found`);
+        }
+
+        // Return the posts array directly (they're already full Post objects)
+        return folder.posts;
+    },
+
+    async removeFolderFromPost(postId: string): Promise<void> {
+        // Find all folders that contain this post
+        const allFolders = await db.folders.toArray();
+        const foldersWithPost = allFolders.filter((folder) =>
+            folder.posts.some((post) => post.id === postId)
+        );
+
+        // Remove the post from all folders
+        await Promise.all(
+            foldersWithPost.map((folder) =>
+                this.removePostFromFolder(folder.id, postId)
+            )
+        );
+    },
+
+    // ==================== Import Operations ====================
+
+    async importPost(post: Post): Promise<void> {
+        // Import post as-is, preserving IDs and timestamps
+        await db.posts.put(post);
+    },
+
+    async importFolder(folder: Folder): Promise<void> {
+        // Import folder as-is, preserving IDs and timestamps
+        await db.folders.put(folder);
     },
 };
