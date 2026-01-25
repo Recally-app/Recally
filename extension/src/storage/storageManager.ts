@@ -66,13 +66,21 @@ export const StorageManager = {
             chrome.storage.local.get(['pinnedTabs'], async (result) => {
                 try {
                     const pinnedData = result.pinnedTabs || [];
-                    
+
                     // Handle old format (array of IDs) - migrate to new format
-                    if (Array.isArray(pinnedData) && pinnedData.length > 0 && typeof pinnedData[0] === 'string') {
-                        console.log('Migrating pinned tabs from old format (IDs) to new format (Posts)');
+                    if (
+                        Array.isArray(pinnedData) &&
+                        pinnedData.length > 0 &&
+                        typeof pinnedData[0] === 'string'
+                    ) {
+                        console.log(
+                            'Migrating pinned tabs from old format (IDs) to new format (Posts)'
+                        );
                         const allPosts = await activeProvider.getAllPosts();
-                        const migratedPosts = allPosts.filter(p => (pinnedData as string[]).includes(p.id));
-                        
+                        const migratedPosts = allPosts.filter((p) =>
+                            (pinnedData as string[]).includes(p.id)
+                        );
+
                         // Save in new format
                         chrome.storage.local.set({ pinnedTabs: migratedPosts }, () => {
                             resolve(migratedPosts);
@@ -91,9 +99,9 @@ export const StorageManager = {
 
     async pinTab(postId: string): Promise<boolean> {
         const pinnedTabs = await this.getPinnedTabs();
-        
+
         // Check if already pinned
-        if (pinnedTabs.some(p => p.id === postId)) {
+        if (pinnedTabs.some((p) => p.id === postId)) {
             return true;
         }
 
@@ -103,9 +111,9 @@ export const StorageManager = {
         }
 
         // Get the full Post object
-        const post = await activeProvider.getAllPosts().then(posts => 
-            posts.find(p => p.id === postId)
-        );
+        const post = await activeProvider
+            .getAllPosts()
+            .then((posts) => posts.find((p) => p.id === postId));
 
         if (!post) {
             return false;
@@ -122,7 +130,7 @@ export const StorageManager = {
 
     async unpinTab(postId: string): Promise<void> {
         const pinnedTabs = await this.getPinnedTabs();
-        const updatedPinnedTabs = pinnedTabs.filter(post => post.id !== postId);
+        const updatedPinnedTabs = pinnedTabs.filter((post) => post.id !== postId);
         return new Promise((resolve) => {
             chrome.storage.local.set({ pinnedTabs: updatedPinnedTabs }, () => {
                 resolve();
@@ -140,7 +148,7 @@ export const StorageManager = {
 
     async isPinned(postId: string): Promise<boolean> {
         const pinnedTabs = await this.getPinnedTabs();
-        return pinnedTabs.some(post => post.id === postId);
+        return pinnedTabs.some((post) => post.id === postId);
     },
 
     // ==================== Import/Export Operations ====================
@@ -148,7 +156,7 @@ export const StorageManager = {
         const posts = await this.getAllPosts();
         const folders = await this.getAllFolders();
         const pinnedTabs = await this.getPinnedTabs();
-        
+
         const exportData = {
             version: '1.0.0',
             exportDate: new Date().toISOString(),
@@ -156,7 +164,7 @@ export const StorageManager = {
                 posts,
                 folders,
                 pinnedTabs,
-            }
+            },
         };
 
         return JSON.stringify(exportData, null, 2);
@@ -165,7 +173,7 @@ export const StorageManager = {
     async importData(jsonString: string, mode: 'merge' | 'replace'): Promise<void> {
         try {
             const importData = JSON.parse(jsonString);
-            
+
             // Validate the import data structure
             if (!importData.data || !importData.data.posts || !importData.data.folders) {
                 throw new Error('Invalid import file format');
@@ -176,13 +184,13 @@ export const StorageManager = {
             if (mode === 'replace') {
                 // Replace: Clear all existing data first
                 await this.deleteAllPosts();
-                
+
                 // Clear all folders
                 const existingFolders = await this.getAllFolders();
                 for (const folder of existingFolders) {
                     await this.deleteFolder(folder.id, false);
                 }
-                
+
                 // Clear pinned tabs
                 await this.reorderPinnedTabs([]);
             }
@@ -202,18 +210,19 @@ export const StorageManager = {
                 // In merge mode, combine with existing pinned tabs
                 const existingPinnedTabs = await this.getPinnedTabs();
                 const allPosts = await this.getAllPosts();
-                const validPostIds = new Set(allPosts.map(p => p.id));
-                
+                const validPostIds = new Set(allPosts.map((p) => p.id));
+
                 // Convert old format (IDs) to new format (Posts) if needed
                 const existingPosts = existingPinnedTabs;
-                const importedPosts = Array.isArray(pinnedTabs) && typeof pinnedTabs[0] === 'string'
-                    ? allPosts.filter(p => (pinnedTabs as string[]).includes(p.id))
-                    : pinnedTabs as Post[];
-                
+                const importedPosts =
+                    Array.isArray(pinnedTabs) && typeof pinnedTabs[0] === 'string'
+                        ? allPosts.filter((p) => (pinnedTabs as string[]).includes(p.id))
+                        : (pinnedTabs as Post[]);
+
                 // Filter, deduplicate, and limit
                 const seenIds = new Set<string>();
                 const combinedPinned = [...existingPosts, ...importedPosts]
-                    .filter(post => {
+                    .filter((post) => {
                         if (!validPostIds.has(post.id) || seenIds.has(post.id)) {
                             return false;
                         }
@@ -221,23 +230,23 @@ export const StorageManager = {
                         return true;
                     })
                     .slice(0, 5); // Limit to 5
-                
+
                 await this.reorderPinnedTabs(combinedPinned);
             } else {
                 // In replace mode, use imported pinned tabs
                 const allPosts = await this.getAllPosts();
-                const validPostIds = new Set(allPosts.map(p => p.id));
-                
+                const validPostIds = new Set(allPosts.map((p) => p.id));
+
                 // Convert old format (IDs) to new format (Posts) if needed
-                const importedPosts = Array.isArray(pinnedTabs) && typeof pinnedTabs[0] === 'string'
-                    ? allPosts.filter(p => (pinnedTabs as string[]).includes(p.id))
-                    : (pinnedTabs as Post[]).filter(post => validPostIds.has(post.id));
-                
+                const importedPosts =
+                    Array.isArray(pinnedTabs) && typeof pinnedTabs[0] === 'string'
+                        ? allPosts.filter((p) => (pinnedTabs as string[]).includes(p.id))
+                        : (pinnedTabs as Post[]).filter((post) => validPostIds.has(post.id));
+
                 const validPinned = importedPosts.slice(0, 5);
-                
+
                 await this.reorderPinnedTabs(validPinned);
             }
-
         } catch (error) {
             console.error('Import failed:', error);
             throw error;

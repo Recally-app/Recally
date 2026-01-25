@@ -8,7 +8,7 @@ export class RecallyDB extends Dexie {
 
     constructor() {
         super('recally_db');
-        
+
         // Version 1: Initial schema
         this.version(1).stores({
             // id is primary key
@@ -23,50 +23,41 @@ export class RecallyDB extends Dexie {
             folders: 'id, name, created_at, order',
         });
 
-        // Version 3: Folders now store full Post objects instead of IDs
-        // No schema change needed as Dexie stores objects as JSON
-        // But we increment version for migration purposes
+        // Version 3: Folders store full Post objects (deprecated approach)
         this.version(3).stores({
             posts: 'id, url, canonical_url, title, created_at, *tags',
             folders: 'id, name, created_at, order',
-        }).upgrade(async (tx) => {
-            // Migration: Convert post_ids to posts array
-            // This will run once for existing users
-            try {
-                const folders = await tx.table('folders').toArray();
-                const posts = await tx.table('posts').toArray();
-                
-                for (const folder of folders) {
-                    // Initialize with empty posts array if neither field exists
-                    if (!('posts' in folder) && !('post_ids' in folder)) {
-                        await tx.table('folders').update(folder.id, {
-                            posts: [],
-                        });
-                    }
-                    // If folder has post_ids (old structure), convert to posts
-                    else if ('post_ids' in folder && Array.isArray(folder.post_ids)) {
-                        const postIds = folder.post_ids as string[];
-                        const folderPosts = posts.filter(p => postIds.includes(p.id));
-                        
-                        // Create a clean folder object without post_ids
-                        const { post_ids, ...folderWithoutPostIds } = folder as any;
-                        
-                        // Update folder with new structure
-                        await tx.table('folders').update(folder.id, {
-                            ...folderWithoutPostIds,
-                            posts: folderPosts,
-                        });
-                    }
-                    // If folder already has posts array, leave it
-                    else if ('posts' in folder && Array.isArray(folder.posts)) {
-                        // Already in new format, do nothing
-                    }
-                }
-            } catch (error) {
-                console.error('Migration error:', error);
-                // Don't throw - allow the app to continue even if migration fails
-            }
         });
+
+        // Version 4: Fix data consistency - folders now store post IDs, not full objects
+        this.version(4)
+            .stores({
+                posts: 'id, url, canonical_url, title, created_at, *tags',
+                folders: 'id, name, created_at, order, *post_ids',
+            })
+            .upgrade(async (tx) => {
+                try {
+                    const folders = await tx.table('folders').toArray();
+
+                    for (const folder of folders) {
+                        let postIds: string[] = [];
+
+                        if ('posts' in folder && Array.isArray(folder.posts)) {
+                            postIds = folder.posts
+                                .map((p: { id?: string }) => p.id)
+                                .filter((id): id is string => Boolean(id));
+                        } else if ('post_ids' in folder && Array.isArray(folder.post_ids)) {
+                            postIds = folder.post_ids;
+                        }
+
+                        await tx.table('folders').update(folder.id, {
+                            post_ids: postIds,
+                        });
+                    }
+                } catch (error) {
+                    console.error('Migration error (v3->v4):', error);
+                }
+            });
     }
 }
 

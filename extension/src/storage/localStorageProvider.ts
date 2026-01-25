@@ -219,18 +219,18 @@ export const LocalStorageProvider: StorageProvider = {
 
     // ==================== Folder Operations ====================
 
-    async saveFolder(name: string, color: string, postIds: string[] = []): Promise<SaveFolderResult> {
+    async saveFolder(
+        name: string,
+        color: string,
+        postIds: string[] = []
+    ): Promise<SaveFolderResult> {
         const trimmedName = name.trim();
-        
+
         if (!trimmedName) {
             throw new Error('Folder name cannot be empty');
         }
 
-        // Check for duplicate folder names
-        const existingFolder = await db.folders
-            .where('name')
-            .equalsIgnoreCase(trimmedName)
-            .first();
+        const existingFolder = await db.folders.where('name').equalsIgnoreCase(trimmedName).first();
 
         if (existingFolder) {
             return {
@@ -239,21 +239,22 @@ export const LocalStorageProvider: StorageProvider = {
             };
         }
 
-        // Fetch full Post objects for the provided IDs
-        const posts = await Promise.all(
-            postIds.map(async (postId) => await db.posts.get(postId))
+        const validPostIds = await Promise.all(
+            postIds.map(async (postId) => {
+                const post = await db.posts.get(postId);
+                return post ? postId : null;
+            })
         );
-        const validPosts = posts.filter((post): post is Post => post !== undefined);
 
         const now = new Date().toISOString();
         const folder: Folder = {
             id: uuidv4(),
             name: trimmedName,
             color,
-            posts: validPosts, // Store full Post objects
+            post_ids: validPostIds.filter((id): id is string => id !== null),
             created_at: now,
             updated_at: now,
-            order: Date.now(), // Use timestamp for initial ordering
+            order: Date.now(),
         };
 
         await db.folders.put(folder);
@@ -263,7 +264,10 @@ export const LocalStorageProvider: StorageProvider = {
         };
     },
 
-    async updateFolder(id: string, updates: Partial<Omit<Folder, 'id' | 'created_at'>>): Promise<Folder> {
+    async updateFolder(
+        id: string,
+        updates: Partial<Omit<Folder, 'id' | 'created_at'>>
+    ): Promise<Folder> {
         const folder = await db.folders.get(id);
         if (!folder) {
             throw new Error(`Folder with id ${id} not found`);
@@ -275,7 +279,7 @@ export const LocalStorageProvider: StorageProvider = {
                 .where('name')
                 .equalsIgnoreCase(updates.name.trim())
                 .first();
-            
+
             if (duplicate && duplicate.id !== id) {
                 throw new Error('A folder with this name already exists');
             }
@@ -298,11 +302,8 @@ export const LocalStorageProvider: StorageProvider = {
             throw new Error(`Folder with id ${id} not found`);
         }
 
-        // If deleteContainedPosts is true, delete all posts in the folder from the main posts table
-        if (deleteContainedPosts && folder.posts.length > 0) {
-            await Promise.all(
-                folder.posts.map((post) => db.posts.delete(post.id))
-            );
+        if (deleteContainedPosts && folder.post_ids.length > 0) {
+            await Promise.all(folder.post_ids.map((postId) => db.posts.delete(postId)));
         }
 
         await db.folders.delete(id);
@@ -325,14 +326,13 @@ export const LocalStorageProvider: StorageProvider = {
             throw new Error(`Post with id ${postId} not found`);
         }
 
-        // Check if post is already in folder
-        if (folder.posts.some((p) => p.id === postId)) {
-            return folder; // Already added, no change needed
+        if (folder.post_ids.includes(postId)) {
+            return folder;
         }
 
         const updatedFolder: Folder = {
             ...folder,
-            posts: [...folder.posts, post], // Add full Post object
+            post_ids: [...folder.post_ids, postId],
             updated_at: new Date().toISOString(),
         };
 
@@ -348,7 +348,7 @@ export const LocalStorageProvider: StorageProvider = {
 
         const updatedFolder: Folder = {
             ...folder,
-            posts: folder.posts.filter((post) => post.id !== postId),
+            post_ids: folder.post_ids.filter((id) => id !== postId),
             updated_at: new Date().toISOString(),
         };
 
@@ -362,22 +362,17 @@ export const LocalStorageProvider: StorageProvider = {
             throw new Error(`Folder with id ${folderId} not found`);
         }
 
-        // Return the posts array directly (they're already full Post objects)
-        return folder.posts;
+        const posts = await Promise.all(folder.post_ids.map((postId) => db.posts.get(postId)));
+
+        return posts.filter((post): post is Post => post !== undefined);
     },
 
     async removeFolderFromPost(postId: string): Promise<void> {
-        // Find all folders that contain this post
         const allFolders = await db.folders.toArray();
-        const foldersWithPost = allFolders.filter((folder) =>
-            folder.posts.some((post) => post.id === postId)
-        );
+        const foldersWithPost = allFolders.filter((folder) => folder.post_ids.includes(postId));
 
-        // Remove the post from all folders
         await Promise.all(
-            foldersWithPost.map((folder) =>
-                this.removePostFromFolder(folder.id, postId)
-            )
+            foldersWithPost.map((folder) => this.removePostFromFolder(folder.id, postId))
         );
     },
 

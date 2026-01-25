@@ -40,7 +40,7 @@ function SavedPostItem({
     isPinned: boolean;
 }) {
     const website = new URL(post.url).hostname.replace('www.', '');
-    
+
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteValue, setNoteValue] = useState(post.notes || '');
     const [isSaving, setIsSaving] = useState(false);
@@ -109,9 +109,9 @@ function SavedPostItem({
             {/* Pinned Badge */}
             {isPinned && (
                 <div className="absolute top-2 right-2 flex items-center justify-center">
-                    <img 
-                        src={pinIcon} 
-                        alt="Pinned" 
+                    <img
+                        src={pinIcon}
+                        alt="Pinned"
                         className="w-3 h-3 opacity-60"
                         title="This tab is pinned"
                     />
@@ -139,10 +139,11 @@ function SavedPostItem({
 
                 {/* Post Info */}
                 <div className="flex flex-col overflow-hidden text-ellipsis">
-                    
-                    <h3 className="m-0 truncate font-semibold leading-tight my-[2px]">{post.title}</h3>
-                    <p className="m-0 truncate text-[9px] opacity-50 mr-20">{post.url}</p>    
-                    
+                    <h3 className="m-0 truncate font-semibold leading-tight my-[2px]">
+                        {post.title}
+                    </h3>
+                    <p className="m-0 truncate text-[9px] opacity-50 mr-20">{post.url}</p>
+
                     {post.tags?.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                             {post.tags.map((tag: string, index: number) => (
@@ -171,7 +172,11 @@ function SavedPostItem({
                             post.notes ? 'bg-white/0' : ''
                         } ${isEditingNote ? 'bg-white/10' : ''}`}
                     >
-                        <img src={noteIcon} alt="Note" className="w-[18px] h-[18px] flex-shrink-0" />
+                        <img
+                            src={noteIcon}
+                            alt="Note"
+                            className="w-[18px] h-[18px] flex-shrink-0"
+                        />
                         {/* Badge indicator when note exists */}
                         {post.notes && (
                             <span className="absolute top-1 right-1 w-2 h-2 bg-blue-400 rounded-full"></span>
@@ -182,8 +187,12 @@ function SavedPostItem({
                                 <div className="flex items-center gap-2 mb-2">
                                     <img src={noteIcon} alt="Note" className="w-6 h-6" />
                                     <div className="flex-1 min-w-0 text-left">
-                                        <p className="text-[12px] font-semibold text-white m-0 truncate">{website}</p>
-                                        <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">{post.url}</p>
+                                        <p className="text-[12px] font-semibold text-white m-0 truncate">
+                                            {website}
+                                        </p>
+                                        <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">
+                                            {post.url}
+                                        </p>
                                     </div>
                                 </div>
                                 <hr className="mt-0 mb-2 mx-1 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
@@ -192,29 +201,35 @@ function SavedPostItem({
                                         {post.notes}
                                     </div>
                                 ) : (
-                                    <p className="text-xs text-gray-400 italic m-0">Click to add a note</p>
+                                    <p className="text-xs text-gray-400 italic m-0">
+                                        Click to add a note
+                                    </p>
                                 )}
                             </div>
                         )}
                     </button>
-                    
+
                     {/* Note Editor Popup */}
                     {isEditingNote && (
                         <>
                             {/* Backdrop to close on click outside */}
-                            <div 
-                                className="fixed inset-0 z-40 bg-black/50" 
+                            <div
+                                className="fixed inset-0 z-40 bg-black/50"
                                 onClick={() => setIsEditingNote(false)}
                             />
-                            <div 
+                            <div
                                 className="absolute top-full right-0 mt-2 p-2 bg-[#1a1a1a] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl z-50 w-[280px]"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="flex items-center gap-2 mb-3">
                                     <img src={noteIcon} alt="Note" className="w-6 h-6" />
                                     <div className="flex-1 min-w-0 text-left">
-                                        <p className="text-[12px] font-semibold text-white m-0 truncate">{website}</p>
-                                        <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">{post.url}</p>
+                                        <p className="text-[12px] font-semibold text-white m-0 truncate">
+                                            {website}
+                                        </p>
+                                        <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">
+                                            {post.url}
+                                        </p>
                                     </div>
                                 </div>
                                 <hr className="mt-0 mb-3 mx-1 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
@@ -252,7 +267,7 @@ function SavedPostItem({
                     )}
                 </div>
 
-                <Dropdown panelClassName="!w-[130px]"> 
+                <Dropdown panelClassName="!w-[130px]">
                     <button
                         onClick={onAddTags}
                         className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 transition-colors hover:bg-white/10"
@@ -392,7 +407,10 @@ function TagEditModal({
     const website = new URL(post.url).hostname.replace('www.', '');
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50"
+            onClick={onClose}
+        >
             <div
                 className="w-[85%] max-w-md rounded-lg bg-[#1A1A1A] border-[1px] border-[rgba(255,255,255,.15)] p-4 shadow-xl shadow-black/30"
                 onClick={(e) => e.stopPropagation()}
@@ -400,25 +418,39 @@ function TagEditModal({
                 {/* Website - Read-only display */}
                 <div className="mb-3">
                     <div className="flex items-center gap-3">
-                        <label className="block text-[13px] text-[rgba(255,255,255,.5)] mb-0 pr-3">Name:</label>
-                        <p className="rounded border border-[rgba(255,255,255,.25)] bg-[rgba(255,255,255,.15)] 
-                        px-3 py-1 text-[rgba(255,255,255,.9)] cursor-not-allowed mb-0 w-full h-[30px]">{website}</p>
+                        <label className="block text-[13px] text-[rgba(255,255,255,.5)] mb-0 pr-3">
+                            Name:
+                        </label>
+                        <p
+                            className="rounded border border-[rgba(255,255,255,.25)] bg-[rgba(255,255,255,.15)] 
+                        px-3 py-1 text-[rgba(255,255,255,.9)] cursor-not-allowed mb-0 w-full h-[30px]"
+                        >
+                            {website}
+                        </p>
                     </div>
                 </div>
 
                 {/* Title - Read-only display */}
                 <div className="mb-3">
                     <div className="flex items-center gap-3">
-                        <label className="block text-[13px] text-[rgba(255,255,255,.5)] mb-0 pr-7">Url:</label>
-                        <p className="rounded border border-[rgba(255,255,255,.25)] bg-[rgba(255,255,255,.15)] 
-                        px-3 py-1 text-[rgba(255,255,255,.9)] cursor-not-allowed mb-0 w-full h-[30px] truncate">{post.url}</p>
+                        <label className="block text-[13px] text-[rgba(255,255,255,.5)] mb-0 pr-7">
+                            Url:
+                        </label>
+                        <p
+                            className="rounded border border-[rgba(255,255,255,.25)] bg-[rgba(255,255,255,.15)] 
+                        px-3 py-1 text-[rgba(255,255,255,.9)] cursor-not-allowed mb-0 w-full h-[30px] truncate"
+                        >
+                            {post.url}
+                        </p>
                     </div>
                 </div>
 
                 {/* Tags - Editable input */}
                 <div className="mb-4">
                     <div className="flex items-center gap-3">
-                        <label className="mb-1 block text-[13px] text-[rgba(255,255,255,.5)] pr-5">Tags:</label>
+                        <label className="mb-1 block text-[13px] text-[rgba(255,255,255,.5)] pr-5">
+                            Tags:
+                        </label>
                         <div className="flex flex-col w-full p-2 border-[2px] border-[rgba(255,255,255,.25)] rounded-lg">
                             <input
                                 ref={tagInputRef}
@@ -434,12 +466,16 @@ function TagEditModal({
                                 px-3 py-1 text-[rgba(255,255,255,.9)] placeholder:text-[rgba(255,255,255,.9)] placeholder:opacity-50 focus:outline-none 
                                 focus:ring-1 focus:ring-[rgba(255,255,255,.25)]"
                             />
-                            <p className="mt-1 text-xs text-white opacity-25">Separate tags with commas</p>
+                            <p className="mt-1 text-xs text-white opacity-25">
+                                Separate tags with commas
+                            </p>
 
                             {/* Tag Suggestions */}
                             {recentTags.length > 0 && (
                                 <div className="mt-3">
-                                    <p className="mb-2 text-xs text-white opacity-70">Recent tags:</p>
+                                    <p className="mb-2 text-xs text-white opacity-70">
+                                        Recent tags:
+                                    </p>
                                     <div className="flex flex-wrap gap-2">
                                         {recentTags.map((tag) => {
                                             const currentTags = tagsInput
@@ -466,19 +502,15 @@ function TagEditModal({
                                         })}
                                     </div>
                                 </div>
-                                )}
-                            </div>
+                            )}
                         </div>
-
                     </div>
-
-                    
+                </div>
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={handleTagAdded}
-                        
                         className="rounded w-full bg-[linear-gradient(to_bottom_right,#146FCF,#0A3869)] px-4 py-2 text-sm text-white 
                         hover:bg-[linear-gradient(to_bottom_right,#146FCF,#146FCF)]"
                     >
@@ -490,7 +522,6 @@ function TagEditModal({
                     >
                         Cancel
                     </button>
-                    
                 </div>
             </div>
         </div>
@@ -499,16 +530,27 @@ function TagEditModal({
 
 /* Delete Confirmation Modal */
 /*------------------------------------------------------------------------------------------------------------------------------------- */
-function DeleteConfirmModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+function DeleteConfirmModal({
+    onClose,
+    onConfirm,
+}: {
+    onClose: () => void;
+    onConfirm: () => void;
+}) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[10px] bg-black/50"
+            onClick={onClose}
+        >
             <div
                 className="w-[320px] rounded-lg bg-[#1A1A1A] border border-[rgba(255,255,255,.15)] p-6 shadow-xl shadow-black/30"
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2 className="text-white text-lg font-bold mb-2 text-center">Delete Saved Tab</h2>
-                <p className="text-white/80 text-sm mb-6 text-center">You wont be able to revert this.</p>
-                
+                <p className="text-white/80 text-sm mb-6 text-center">
+                    You wont be able to revert this.
+                </p>
+
                 <div className="flex gap-3">
                     <button
                         onClick={onConfirm}
@@ -530,15 +572,15 @@ function DeleteConfirmModal({ onClose, onConfirm }: { onClose: () => void; onCon
 
 /* Settings Modal */
 /*------------------------------------------------------------------------------------------------------------------------------------- */
-function SettingsModal({ 
-    onClose, 
-    sortBy, 
-    onSortByChange, 
-    sortReversed, 
+function SettingsModal({
+    onClose,
+    sortBy,
+    onSortByChange,
+    sortReversed,
     onToggleReverse,
     onExport,
-    onImport
-}: { 
+    onImport,
+}: {
     onClose: () => void;
     sortBy: 'name' | 'date';
     onSortByChange: (sortBy: 'name' | 'date') => void;
@@ -560,12 +602,14 @@ function SettingsModal({
                     <img src={recallyIcon} alt="Settings" className="w-7 h-7" />
                     <h2 className="text-white text-[20px] font-bold">Settings</h2>
                 </div>
-                
+
                 {/* Sort By Section */}
                 <div className="flex items-center gap-2 mb-4">
                     <label className="text-white/60 text-base text-[14px] pr-1">Sort By:</label>
-                    <div className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
-                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]">
+                    <div
+                        className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
+                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]"
+                    >
                         <button
                             onClick={() => onSortByChange('name')}
                             className={`px-4 py-1 rounded-full text-[13px] font-medium transition-all ${
@@ -589,19 +633,24 @@ function SettingsModal({
                         <button
                             onClick={onToggleReverse}
                             className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                                sortReversed 
+                                sortReversed
                                     ? 'bg-[#DC2626] hover:bg-[#B91C1C]'
                                     : 'bg-[#4B5563] hover:bg-[#6B7280]'
                             }`}
-                            title={sortReversed ? "Sort Ascending" : "Sort Descending"}
+                            title={sortReversed ? 'Sort Ascending' : 'Sort Descending'}
                         >
-                            <svg 
+                            <svg
                                 className={`w-4 h-4 text-white transition-transform ${sortReversed ? 'rotate-180' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
                             </svg>
                         </button>
                     </div>
@@ -610,8 +659,10 @@ function SettingsModal({
                 {/* Data Section */}
                 <div className="flex items-center gap-2">
                     <label className="text-white/60 text-base text-[14px] pr-5">Data:</label>
-                    <div className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
-                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]">
+                    <div
+                        className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
+                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]"
+                    >
                         {/* Export Button */}
                         <button
                             onClick={onExport}
@@ -629,13 +680,18 @@ function SettingsModal({
                                 font-medium text-white/80 hover:text-white hover:bg-[rgba(255,255,255,.1)] transition-all justify-center"
                             >
                                 Import
-                                <svg 
+                                <svg
                                     className={`w-3 h-3 transition-transform ${showImportDropdown ? 'rotate-180' : ''}`}
-                                    fill="none" 
-                                    stroke="currentColor" 
+                                    fill="none"
+                                    stroke="currentColor"
                                     viewBox="0 0 24 24"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                    />
                                 </svg>
                             </button>
 
@@ -643,8 +699,8 @@ function SettingsModal({
                             {showImportDropdown && (
                                 <>
                                     {/* Backdrop to close dropdown */}
-                                    <div 
-                                        className="fixed inset-0 z-40" 
+                                    <div
+                                        className="fixed inset-0 z-40"
                                         onClick={() => setShowImportDropdown(false)}
                                     />
                                     <div className="absolute top-full mt-2 right-0 w-[120px] bg-[#1A1A1A] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl z-50 overflow-hidden">
@@ -746,7 +802,7 @@ export default function PopupApp() {
     };
 
     const closeConfirmModal = () => {
-        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
     };
 
     const buttonTextMap: Record<SaveStatus, string> = {
@@ -769,14 +825,9 @@ export default function PopupApp() {
 
     const fetchFolders = async () => {
         try {
-        const allFolders = await StorageManager.getAllFolders();
-            // Ensure all folders have the posts array
-            const normalizedFolders = allFolders.map(folder => ({
-                ...folder,
-                posts: folder.posts || [],
-            }));
-            setFolders(normalizedFolders);
-            setFilteredFolders(normalizedFolders);
+            const allFolders = await StorageManager.getAllFolders();
+            setFolders(allFolders);
+            setFilteredFolders(allFolders);
         } catch (error) {
             console.error('Error fetching folders:', error);
             setFolders([]);
@@ -786,7 +837,7 @@ export default function PopupApp() {
 
     const fetchPinnedTabs = async () => {
         try {
-        const pinned = await StorageManager.getPinnedTabs();
+            const pinned = await StorageManager.getPinnedTabs();
             // Ensure pinned is always an array
             setPinnedTabIds(Array.isArray(pinned) ? pinned : []);
         } catch (error) {
@@ -799,7 +850,7 @@ export default function PopupApp() {
         fetchPosts();
         fetchFolders();
         fetchPinnedTabs();
-        
+
         // Load saved popup height and view mode
         chrome.storage.local.get(['popupHeight', 'viewMode'], (result) => {
             if (result.popupHeight) {
@@ -822,7 +873,7 @@ export default function PopupApp() {
         const performSearch = async () => {
             // Filter posts
             let filteredPostsResult = posts;
-            
+
             if (searchQuery.trim()) {
                 filteredPostsResult = await StorageManager.searchPosts(searchQuery);
             }
@@ -845,10 +896,10 @@ export default function PopupApp() {
 
             // Filter folders (by name only)
             let filteredFoldersResult = folders;
-            
+
             if (searchQuery.trim()) {
                 const query = searchQuery.toLowerCase();
-                filteredFoldersResult = folders.filter(folder => 
+                filteredFoldersResult = folders.filter((folder) =>
                     folder.name.toLowerCase().includes(query)
                 );
             }
@@ -877,7 +928,7 @@ export default function PopupApp() {
     const handleResizeStart = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsResizing(true);
-        
+
         const startY = e.clientY;
         const startHeight = popupHeight;
         let currentHeight = startHeight;
@@ -1043,22 +1094,22 @@ export default function PopupApp() {
             showCancel: true,
             onConfirm: async () => {
                 closeConfirmModal();
-            try {
-                await StorageManager.deleteAllPosts();
-                // Clear all pinned tabs since all posts are deleted
-                await StorageManager.reorderPinnedTabs([]);
-                await fetchPosts();
-                await fetchPinnedTabs();
-            } catch (err) {
-                console.error('Failed to delete all posts:', err);
+                try {
+                    await StorageManager.deleteAllPosts();
+                    // Clear all pinned tabs since all posts are deleted
+                    await StorageManager.reorderPinnedTabs([]);
+                    await fetchPosts();
+                    await fetchPinnedTabs();
+                } catch (err) {
+                    console.error('Failed to delete all posts:', err);
                     showConfirmModal({
                         type: 'error',
-                    title: 'Deletion Failed',
+                        title: 'Deletion Failed',
                         message: 'Could not delete posts. Please try again.',
                         confirmText: 'OK',
                         onConfirm: closeConfirmModal,
-                });
-            }
+                    });
+                }
             },
             onCancel: closeConfirmModal,
         });
@@ -1069,31 +1120,41 @@ export default function PopupApp() {
     const handleCreateFolder = async (name: string, color: string, addAllOpenTabs?: boolean) => {
         try {
             let postIds: string[] = [];
-            
+
             // If user wants to add all open tabs, get them first
             if (addAllOpenTabs) {
                 const tabs = await chrome.tabs.query({ currentWindow: true });
-                const validTabs = tabs.filter(tab => tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'));
-                
+                const validTabs = tabs.filter(
+                    (tab) =>
+                        tab.url &&
+                        !tab.url.startsWith('chrome://') &&
+                        !tab.url.startsWith('chrome-extension://')
+                );
+
                 // Save each tab as a post if not already saved
                 const savedPosts = await Promise.all(
                     validTabs.map(async (tab) => {
                         if (tab.url && tab.title) {
-                            const result = await StorageManager.savePost(tab.url, tab.title, [], tab.favIconUrl);
+                            const result = await StorageManager.savePost(
+                                tab.url,
+                                tab.title,
+                                [],
+                                tab.favIconUrl
+                            );
                             return result.post.id;
                         }
                         return null;
                     })
                 );
-                
+
                 postIds = savedPosts.filter((id): id is string => id !== null);
-                
+
                 // Refresh posts list if we added any
                 if (postIds.length > 0) {
                     await fetchPosts();
                 }
             }
-            
+
             const result = await StorageManager.saveFolder(name, color, postIds);
             if (result.wasDuplicate) {
                 showConfirmModal({
@@ -1128,7 +1189,7 @@ export default function PopupApp() {
 
     const handleEditFolder = async (name: string, color: string) => {
         if (!selectedFolder) return;
-        
+
         try {
             await StorageManager.updateFolder(selectedFolder.id, { name, color });
             await fetchFolders();
@@ -1156,51 +1217,50 @@ export default function PopupApp() {
             showDeny: true,
             onConfirm: async () => {
                 closeConfirmModal();
-            // Delete folder only
-            try {
-                await StorageManager.deleteFolder(folderId, false);
-                await fetchFolders();
-            } catch (error) {
-                console.error('Failed to delete folder:', error);
+                // Delete folder only
+                try {
+                    await StorageManager.deleteFolder(folderId, false);
+                    await fetchFolders();
+                } catch (error) {
+                    console.error('Failed to delete folder:', error);
                     showConfirmModal({
                         type: 'error',
-                    title: 'Deletion Failed',
+                        title: 'Deletion Failed',
                         message: 'Could not delete folder. Please try again.',
                         confirmText: 'OK',
                         onConfirm: closeConfirmModal,
-                });
-            }
+                    });
+                }
             },
             onDeny: async () => {
                 closeConfirmModal();
-            // Delete folder and all posts
-            try {
-                // Get folder posts to unpin them if needed
-                const folder = folders.find(f => f.id === folderId);
-                if (folder) {
-                    // Unpin any posts in this folder
-                        for (const post of folder.posts) {
+                // Delete folder and all posts
+                try {
+                    const folder = folders.find((f) => f.id === folderId);
+                    if (folder) {
+                        const folderPosts = await StorageManager.getPostsByFolderId(folderId);
+                        for (const post of folderPosts) {
                             const isPinned = await StorageManager.isPinned(post.id);
-                        if (isPinned) {
+                            if (isPinned) {
                                 await StorageManager.unpinTab(post.id);
+                            }
                         }
                     }
-                }
-                
-                await StorageManager.deleteFolder(folderId, true);
-                await fetchFolders();
-                await fetchPosts();
-                await fetchPinnedTabs();
-            } catch (error) {
-                console.error('Failed to delete folder and posts:', error);
+
+                    await StorageManager.deleteFolder(folderId, true);
+                    await fetchFolders();
+                    await fetchPosts();
+                    await fetchPinnedTabs();
+                } catch (error) {
+                    console.error('Failed to delete folder and posts:', error);
                     showConfirmModal({
                         type: 'error',
-                    title: 'Deletion Failed',
+                        title: 'Deletion Failed',
                         message: 'Could not delete folder and tabs. Please try again.',
                         confirmText: 'OK',
                         onConfirm: closeConfirmModal,
-                });
-            }
+                    });
+                }
             },
             onCancel: closeConfirmModal,
         });
@@ -1209,7 +1269,7 @@ export default function PopupApp() {
     const handleOpenAllTabsInFolder = async (folderId: string) => {
         try {
             const posts = await StorageManager.getPostsByFolderId(folderId);
-            
+
             if (posts.length === 0) {
                 showConfirmModal({
                     type: 'info',
@@ -1225,9 +1285,9 @@ export default function PopupApp() {
             for (let i = 0; i < posts.length; i++) {
                 const post = posts[i];
                 if (post) {
-                    await chrome.tabs.create({ 
-                        url: post.url, 
-                        active: i === 0 // Make first tab active
+                    await chrome.tabs.create({
+                        url: post.url,
+                        active: i === 0, // Make first tab active
                     });
                 }
             }
@@ -1341,7 +1401,7 @@ export default function PopupApp() {
             const jsonData = await StorageManager.exportData();
             const blob = new Blob([jsonData], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            
+
             // Create a temporary download link
             const a = document.createElement('a');
             a.href = url;
@@ -1375,40 +1435,41 @@ export default function PopupApp() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
-        
+
         input.onchange = async (e: Event) => {
             const target = e.target as HTMLInputElement;
             const file = target.files?.[0];
-            
+
             if (!file) return;
 
             try {
                 const text = await file.text();
-                
+
                 // Show confirmation dialog
                 showConfirmModal({
                     type: 'warning',
                     title: mode === 'merge' ? 'Merge Data?' : 'Replace All Data?',
-                    message: mode === 'merge' 
-                        ? 'This will add the imported data to your existing data.'
-                        : 'This will delete all your current data and replace it with the imported data. This cannot be undone!',
+                    message:
+                        mode === 'merge'
+                            ? 'This will add the imported data to your existing data.'
+                            : 'This will delete all your current data and replace it with the imported data. This cannot be undone!',
                     confirmText: mode === 'merge' ? 'Merge' : 'Replace All',
                     cancelText: 'Cancel',
                     showCancel: true,
                     onConfirm: async () => {
                         closeConfirmModal();
                         try {
-                // Perform the import
-                await StorageManager.importData(text, mode);
-                
-                // Refresh all data
-                await fetchPosts();
-                await fetchFolders();
-                await fetchPinnedTabs();
+                            // Perform the import
+                            await StorageManager.importData(text, mode);
+
+                            // Refresh all data
+                            await fetchPosts();
+                            await fetchFolders();
+                            await fetchPinnedTabs();
 
                             showConfirmModal({
                                 type: 'success',
-                    title: 'Import Successful',
+                                title: 'Import Successful',
                                 message: `Your data has been ${mode === 'merge' ? 'merged' : 'replaced'} successfully.`,
                                 confirmText: 'OK',
                                 onConfirm: closeConfirmModal,
@@ -1418,7 +1479,10 @@ export default function PopupApp() {
                             showConfirmModal({
                                 type: 'error',
                                 title: 'Import Failed',
-                                message: importError instanceof Error ? importError.message : 'Could not import data. Please check the file format.',
+                                message:
+                                    importError instanceof Error
+                                        ? importError.message
+                                        : 'Could not import data. Please check the file format.',
                                 confirmText: 'OK',
                                 onConfirm: closeConfirmModal,
                             });
@@ -1431,7 +1495,10 @@ export default function PopupApp() {
                 showConfirmModal({
                     type: 'error',
                     title: 'Import Failed',
-                    message: error instanceof Error ? error.message : 'Could not import data. Please check the file format.',
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : 'Could not import data. Please check the file format.',
                     confirmText: 'OK',
                     onConfirm: closeConfirmModal,
                 });
@@ -1462,227 +1529,250 @@ export default function PopupApp() {
 
     return (
         <>
-        <div 
-            className="w-[380px] bg-[radial-gradient(circle_at_top_left,#202020,#1A1A1A)]
+            <div
+                className="w-[380px] bg-[radial-gradient(circle_at_top_left,#202020,#1A1A1A)]
             font-sans text-[#26405e] rounded-[0px] relative flex flex-col"
-            style={{ height: `${popupHeight}px` }}
-        >
-            {/* Fixed Header */}
-            <header className="flex items-center justify-between mx-[14px] my-[4px] mb-0 flex-shrink-0">
-                {/* Recally Button */}
-                <button 
-                    onClick={() => setSettingsModalOpen(true)}
-                    className={`min-w-[30px] min-h-[30px] max-w-[38px] max-h-[38px] p-[5px] bg-[radial-gradient(circle_at_top_left,#002C5A,#1F2B37)]  
+                style={{ height: `${popupHeight}px` }}
+            >
+                {/* Fixed Header */}
+                <header className="flex items-center justify-between mx-[14px] my-[4px] mb-0 flex-shrink-0">
+                    {/* Recally Button */}
+                    <button
+                        onClick={() => setSettingsModalOpen(true)}
+                        className={`min-w-[30px] min-h-[30px] max-w-[38px] max-h-[38px] p-[5px] bg-[radial-gradient(circle_at_top_left,#002C5A,#1F2B37)]  
                     rounded-full flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px]
                     hover:bg-[radial-gradient(circle_at_top_left,#293f57,#27476b)] ${
                         settingsModalOpen ? 'relative z-[60]' : ''
                     }`}
-                >
-                    <img src={recallyIcon} alt="Recally icon" className="w-[16px] h-[16px]" />
-                </button>
+                    >
+                        <img src={recallyIcon} alt="Recally icon" className="w-[16px] h-[16px]" />
+                    </button>
 
-                {/* Search Bar */}
-                <div className="mx-2 my-2 mb-2 relative w-fill">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-                        {/* Search Icon SVG */}
-                        <img src={searchIcon} alt="Search icon" className="w-[16px] h-[16px]" />
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="Search posts..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-[220px] p-1 pl-10 rounded-[19px] border border-[rgba(255,255,255,.25)] 
+                    {/* Search Bar */}
+                    <div className="mx-2 my-2 mb-2 relative w-fill">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                            {/* Search Icon SVG */}
+                            <img src={searchIcon} alt="Search icon" className="w-[16px] h-[16px]" />
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search posts..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-[220px] p-1 pl-10 rounded-[19px] border border-[rgba(255,255,255,.25)] 
                         bg-[rgba(0,0,0,.15)] text-[rgba(255,255,255,.8)] placeholder:text-[rgba(255,255,255,.5)] 
                         placeholder:opacity-50 focus:outline-none focus:ring-1 focus:ring-[rgba(255,255,255,.5)] focus:border-transparent text-[14px]"
-                    />
-                </div>
+                        />
+                    </div>
 
-                {/* Save Tab Button (List View) / Create Folder Button (Folder View) */}
-                <div className="flex items-center gap-2"></div>
-                {viewMode === 'list' ? (
-                    <button 
-                        className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#0A4582,#002C5A)] 
+                    {/* Save Tab Button (List View) / Create Folder Button (Folder View) */}
+                    <div className="flex items-center gap-2"></div>
+                    {viewMode === 'list' ? (
+                        <button
+                            className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#0A4582,#002C5A)] 
                         text-white rounded-[19px] flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px] 
                         hover:bg-[radial-gradient(circle_at_top_left,#0A4582,#0A4582)] 
-                        text-[14px] font-regular" 
-                        onClick={handleSaveClick} 
-                        disabled={notIdle}
-                    >
-                        Save Tab
-                    </button>
-                ) : (
-                    <button
-                        onClick={() => setCreateFolderModalOpen(true)}
-                        className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#5c990b,#b8d419)] 
+                        text-[14px] font-regular"
+                            onClick={handleSaveClick}
+                            disabled={notIdle}
+                        >
+                            Save Tab
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setCreateFolderModalOpen(true)}
+                            className="w-[100px] p-1 bg-[radial-gradient(circle_at_top_left,#5c990b,#b8d419)] 
                         text-white rounded-[19px] flex items-center justify-center border-[rgba(255,255,255,.15)] border-[1px] 
                         hover:bg-[radial-gradient(circle_at_top_left,#b8d419,#b8d419)] 
                         text-[14px] font-regular"
-                        title="Create New Folder"
-                    >
-                        + Folder
-                    </button>
-                )}
-            </header>
-
-            <hr className="mt-0 mb-2 mx-3 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
-            
-            {/* Pinned tabs Bar 01 and List and Folder */}
-            <div className="mx-3 mb-2 flex items-center gap-1.5">
-                <PinnedTabsBar
-                    pinnedTabIds={pinnedTabIds}
-                    posts={posts}
-                    onUnpin={handleUnpinTab}
-                    onReorder={handleReorderPinnedTabs}
-                    onTabClick={(url) => chrome.tabs.create({ url })}
-                />
-                
-                {/* List View Button */}
-                <button 
-                    onClick={() => changeViewMode('list')}
-                    className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
-                        viewMode === 'list' 
-                            ? '' 
-                            : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
-                    }`}
-                    style={viewMode === 'list' ? {
-                        background: 'linear-gradient(to bottom, #146FCF, #0A3869)'
-                    } : {}}
-                    title="List View"
-                > 
-                    <img 
-                        src={listIcon} 
-                        alt="List Button" 
-                        className={`size-[10px] m-1 ${viewMode === 'list' ? 'opacity-80' : 'opacity-50'}`} 
-                    />
-                </button>
-                
-                {/* Folder View Button */}
-                <button 
-                    onClick={() => changeViewMode('folder')}
-                    className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
-                        viewMode === 'folder' 
-                            ? '' 
-                            : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
-                    }`}
-                    style={viewMode === 'folder' ? {
-                        background: 'linear-gradient(to bottom,rgb(184, 212, 25),rgb(92, 153, 11))'
-                    } : {}}
-                    title="Folder View"
-                >
-                    <img 
-                        src={folderIcon} 
-                        alt="Folder Button" 
-                        className={`size-[15px] m-1 ${viewMode === 'folder' ? 'opacity-80' : 'opacity-50'}`} 
-                    />
-                </button>
-            </div>
-
-            {/* Scrollable List Area Only */}
-            <div 
-                className="scrollable-list flex-1 overflow-y-scroll overflow-x-hidden mx-3"
-                style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
-                    paddingRight: '12px',
-                } as React.CSSProperties}
-            >
-                {/* List View */}
-                {viewMode === 'list' && (
-                    <ul className="m-0 list-none flex flex-col gap-2">
-                    {filteredPosts.length === 0 ? (
-                        searchQuery.trim() ? (
-                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
-                                <p>No posts found matching "{searchQuery}"</p>
-                            </div>
-                        ) : (
-                            <EmptyState />
-                        )
-                    ) : (
-                        filteredPosts.map((post: any) => {
-                            const isPinned = pinnedTabIds.some(p => p.id === post.id);
-                            return (
-                                <SavedPostItem
-                                    key={post.id}
-                                    post={post}
-                                    isHighlighted={existingPostId === post.id}
-                                    onDelete={() => handleDeletePost(post.id)}
-                                    onAddTags={() => handleAddTags(post)}
-                                    onSaveNote={(noteText) => handleSaveNote(post.id, noteText)}
-                                    onPinToggle={() => {
-                                        if (isPinned) {
-                                            handleUnpinTab(post.id);
-                                        } else {
-                                            handlePinTab(post.id);
-                                        }
-                                    }}
-                                    isPinned={isPinned}
-                                />
-                            );
-                        })
+                            title="Create New Folder"
+                        >
+                            + Folder
+                        </button>
                     )}
-                    </ul>
-                )}
+                </header>
 
-                {/* Folder View */}
-                {viewMode === 'folder' && (
-                    <ul className="m-0 list-none flex flex-col gap-2">
-                    {filteredFolders.length === 0 ? (
-                        searchQuery.trim() ? (
-                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
-                                <p>No folders found matching "{searchQuery}"</p>
-                            </div>
-                        ) : folders.length === 0 ? (
-                            <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
-                                <p>No folders yet.</p>
-                                <button
-                                    onClick={() => setCreateFolderModalOpen(true)}
-                                    className="mt-2 px-4 py-2 bg-[#26405e] text-white text-sm rounded-full hover:bg-[#3a6ca1] transition-colors"
-                                >
-                                    Create Your First Folder
-                                </button>
-                            </div>
-                        ) : null
-                    ) : (
-                        filteredFolders.map((folder) => {
-                            // Get posts for this folder
-                            // No need to filter - folder already contains full Post objects
-                            const folderPosts = folder.posts;
+                <hr className="mt-0 mb-2 mx-3 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
 
-                            return (
-                                <SavedFolderItem
-                                    key={folder.id}
-                                    folder={folder}
-                                    posts={folderPosts}
-                                    onDelete={() => handleDeleteFolder(folder.id)}
-                                    onEdit={() => {
-                                        setSelectedFolder(folder);
-                                        setEditFolderModalOpen(true);
-                                    }}
-                                    onOpenAllTabs={() => handleOpenAllTabsInFolder(folder.id)}
-                                    onAddTab={() => {
-                                        setSelectedFolder(folder);
-                                        setManageTabsMode('add');
-                                        setManageTabsModalOpen(true);
-                                    }}
-                                    onAddCurrentTab={async () => {
-                                        // Add current tab to this folder
-                                        try {
-                                            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-                                            if (!tab?.url || !tab?.title) {
-                                                console.error('Could not get current tab info');
-                                                return;
+                {/* Pinned tabs Bar 01 and List and Folder */}
+                <div className="mx-3 mb-2 flex items-center gap-1.5">
+                    <PinnedTabsBar
+                        pinnedTabIds={pinnedTabIds}
+                        posts={posts}
+                        onUnpin={handleUnpinTab}
+                        onReorder={handleReorderPinnedTabs}
+                        onTabClick={(url) => chrome.tabs.create({ url })}
+                    />
+
+                    {/* List View Button */}
+                    <button
+                        onClick={() => changeViewMode('list')}
+                        className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
+                            viewMode === 'list'
+                                ? ''
+                                : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
+                        }`}
+                        style={
+                            viewMode === 'list'
+                                ? {
+                                      background: 'linear-gradient(to bottom, #146FCF, #0A3869)',
+                                  }
+                                : {}
+                        }
+                        title="List View"
+                    >
+                        <img
+                            src={listIcon}
+                            alt="List Button"
+                            className={`size-[10px] m-1 ${viewMode === 'list' ? 'opacity-80' : 'opacity-50'}`}
+                        />
+                    </button>
+
+                    {/* Folder View Button */}
+                    <button
+                        onClick={() => changeViewMode('folder')}
+                        className={`min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] rounded-full flex items-center justify-center transition-all ${
+                            viewMode === 'folder'
+                                ? ''
+                                : 'bg-[rgba(255,255,255,.25)] hover:bg-[rgba(255,255,255,.35)]'
+                        }`}
+                        style={
+                            viewMode === 'folder'
+                                ? {
+                                      background:
+                                          'linear-gradient(to bottom,rgb(184, 212, 25),rgb(92, 153, 11))',
+                                  }
+                                : {}
+                        }
+                        title="Folder View"
+                    >
+                        <img
+                            src={folderIcon}
+                            alt="Folder Button"
+                            className={`size-[15px] m-1 ${viewMode === 'folder' ? 'opacity-80' : 'opacity-50'}`}
+                        />
+                    </button>
+                </div>
+
+                {/* Scrollable List Area Only */}
+                <div
+                    className="scrollable-list flex-1 overflow-y-scroll overflow-x-hidden mx-3"
+                    style={
+                        {
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
+                            paddingRight: '12px',
+                        } as React.CSSProperties
+                    }
+                >
+                    {/* List View */}
+                    {viewMode === 'list' && (
+                        <ul className="m-0 list-none flex flex-col gap-2">
+                            {filteredPosts.length === 0 ? (
+                                searchQuery.trim() ? (
+                                    <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                        <p>No posts found matching "{searchQuery}"</p>
+                                    </div>
+                                ) : (
+                                    <EmptyState />
+                                )
+                            ) : (
+                                filteredPosts.map((post: any) => {
+                                    const isPinned = pinnedTabIds.some((p) => p.id === post.id);
+                                    return (
+                                        <SavedPostItem
+                                            key={post.id}
+                                            post={post}
+                                            isHighlighted={existingPostId === post.id}
+                                            onDelete={() => handleDeletePost(post.id)}
+                                            onAddTags={() => handleAddTags(post)}
+                                            onSaveNote={(noteText) =>
+                                                handleSaveNote(post.id, noteText)
                                             }
+                                            onPinToggle={() => {
+                                                if (isPinned) {
+                                                    handleUnpinTab(post.id);
+                                                } else {
+                                                    handlePinTab(post.id);
+                                                }
+                                            }}
+                                            isPinned={isPinned}
+                                        />
+                                    );
+                                })
+                            )}
+                        </ul>
+                    )}
 
-                                            // Save the post first (if not already saved)
-                                            const result = await StorageManager.savePost(tab.url, tab.title, [], tab.favIconUrl);
-                                            
-                                            // Add to folder
-                                            await StorageManager.addPostToFolder(folder.id, result.post.id);
-                                            await fetchFolders();
-                                            await fetchPosts();
+                    {/* Folder View */}
+                    {viewMode === 'folder' && (
+                        <ul className="m-0 list-none flex flex-col gap-2">
+                            {filteredFolders.length === 0 ? (
+                                searchQuery.trim() ? (
+                                    <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                        <p>No folders found matching "{searchQuery}"</p>
+                                    </div>
+                                ) : folders.length === 0 ? (
+                                    <div className="mt-10 text-center text-[rgba(255,255,255,.5)] opacity-70">
+                                        <p>No folders yet.</p>
+                                        <button
+                                            onClick={() => setCreateFolderModalOpen(true)}
+                                            className="mt-2 px-4 py-2 bg-[#26405e] text-white text-sm rounded-full hover:bg-[#3a6ca1] transition-colors"
+                                        >
+                                            Create Your First Folder
+                                        </button>
+                                    </div>
+                                ) : null
+                            ) : (
+                                filteredFolders.map((folder) => {
+                                    return (
+                                        <SavedFolderItem
+                                            key={folder.id}
+                                            folder={folder}
+                                            onDelete={() => handleDeleteFolder(folder.id)}
+                                            onEdit={() => {
+                                                setSelectedFolder(folder);
+                                                setEditFolderModalOpen(true);
+                                            }}
+                                            onOpenAllTabs={() =>
+                                                handleOpenAllTabsInFolder(folder.id)
+                                            }
+                                            onAddTab={() => {
+                                                setSelectedFolder(folder);
+                                                setManageTabsMode('add');
+                                                setManageTabsModalOpen(true);
+                                            }}
+                                            onAddCurrentTab={async () => {
+                                                // Add current tab to this folder
+                                                try {
+                                                    const [tab] = await chrome.tabs.query({
+                                                        active: true,
+                                                        currentWindow: true,
+                                                    });
+                                                    if (!tab?.url || !tab?.title) {
+                                                        console.error(
+                                                            'Could not get current tab info'
+                                                        );
+                                                        return;
+                                                    }
 
-                                            /***  Show success notification
+                                                    // Save the post first (if not already saved)
+                                                    const result = await StorageManager.savePost(
+                                                        tab.url,
+                                                        tab.title,
+                                                        [],
+                                                        tab.favIconUrl
+                                                    );
+
+                                                    // Add to folder
+                                                    await StorageManager.addPostToFolder(
+                                                        folder.id,
+                                                        result.post.id
+                                                    );
+                                                    await fetchFolders();
+                                                    await fetchPosts();
+
+                                                    /***  Show success notification
                                             showConfirmModal({
                                                 type: 'success',
                                                 title: 'Tab Added',
@@ -1691,172 +1781,197 @@ export default function PopupApp() {
                                                 onConfirm: closeConfirmModal,
                                                 autoCloseDelay: 2000,
                                             });*/
-                                        } catch (error) {
-                                            console.error('Failed to add current tab to folder:', error);
-                                            showConfirmModal({
-                                                type: 'error',
-                                                title: 'Failed to Add Tab',
-                                                message: 'Could not add tab to folder. Please try again.',
-                                                confirmText: 'OK',
-                                                onConfirm: closeConfirmModal,
-                                            });
-                                        }
-                                    }}
-                                    onRemoveTab={() => {
-                                        setSelectedFolder(folder);
-                                        setManageTabsMode('remove');
-                                        setManageTabsModalOpen(true);
-                                    }}
-                                    onChangeColor={() => {
-                                        setSelectedFolder(folder);
-                                        setEditFolderModalOpen(true);
-                                    }}
-                                    onPostClick={(url) => chrome.tabs.create({ url })}
-                                    renderPostItem={(post) => {
-                                        const isPinned = pinnedTabIds.some((p: Post) => p.id === post.id);
-                                        return (
-                                            <CompactPostItem
-                                                key={post.id}
-                                                post={post}
-                                                onClick={() => chrome.tabs.create({ url: post.url })}
-                                                onDelete={async () => {
-                                                    // Remove post from folder
-                                                    await StorageManager.removePostFromFolder(folder.id, post.id);
-                                                    await fetchFolders();
-                                                }}
-                                                onAddTags={() => handleAddTags(post)}
-                                                onSaveNote={(noteText) => handleSaveNote(post.id, noteText)}
-                                                onPinToggle={() => {
-                                                    if (isPinned) {
-                                                        handleUnpinTab(post.id);
-                                                    } else {
-                                                        handlePinTab(post.id);
-                                                    }
-                                                }}
-                                                isPinned={isPinned}
-                                            />
-                                        );
-                                    }}
-                                />
-                            );
-                        })
+                                                } catch (error) {
+                                                    console.error(
+                                                        'Failed to add current tab to folder:',
+                                                        error
+                                                    );
+                                                    showConfirmModal({
+                                                        type: 'error',
+                                                        title: 'Failed to Add Tab',
+                                                        message:
+                                                            'Could not add tab to folder. Please try again.',
+                                                        confirmText: 'OK',
+                                                        onConfirm: closeConfirmModal,
+                                                    });
+                                                }
+                                            }}
+                                            onRemoveTab={() => {
+                                                setSelectedFolder(folder);
+                                                setManageTabsMode('remove');
+                                                setManageTabsModalOpen(true);
+                                            }}
+                                            onChangeColor={() => {
+                                                setSelectedFolder(folder);
+                                                setEditFolderModalOpen(true);
+                                            }}
+                                            onPostClick={(url) => chrome.tabs.create({ url })}
+                                            renderPostItem={(post) => {
+                                                const isPinned = pinnedTabIds.some(
+                                                    (p: Post) => p.id === post.id
+                                                );
+                                                return (
+                                                    <CompactPostItem
+                                                        key={post.id}
+                                                        post={post}
+                                                        onClick={() =>
+                                                            chrome.tabs.create({ url: post.url })
+                                                        }
+                                                        onDelete={async () => {
+                                                            // Remove post from folder
+                                                            await StorageManager.removePostFromFolder(
+                                                                folder.id,
+                                                                post.id
+                                                            );
+                                                            await fetchFolders();
+                                                        }}
+                                                        onAddTags={() => handleAddTags(post)}
+                                                        onSaveNote={(noteText) =>
+                                                            handleSaveNote(post.id, noteText)
+                                                        }
+                                                        onPinToggle={() => {
+                                                            if (isPinned) {
+                                                                handleUnpinTab(post.id);
+                                                            } else {
+                                                                handlePinTab(post.id);
+                                                            }
+                                                        }}
+                                                        isPinned={isPinned}
+                                                    />
+                                                );
+                                            }}
+                                        />
+                                    );
+                                })
+                            )}
+                        </ul>
                     )}
-                    </ul>
+                </div>
+
+                {/* Resize Handle - Fixed at bottom */}
+                <div
+                    className={`resize-handle ${isResizing ? 'resizing' : ''}`}
+                    onMouseDown={handleResizeStart}
+                    title="Drag to resize"
+                    style={{
+                        width: '100%',
+                        height: '30px',
+                        background: 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'ns-resize',
+                        flexShrink: 0,
+                    }}
+                >
+                    <img
+                        src={dotsHorizontalIcon}
+                        alt="Resize handle"
+                        className="resize-handle-indicator"
+                        style={{
+                            width: '24px',
+                            height: '24px',
+                            opacity: 0.5,
+                            transition: 'opacity 0.2s ease',
+                        }}
+                    />
+                </div>
+
+                <TagEditModal
+                    post={selectedPostForTags}
+                    isOpen={tagEditModalOpen}
+                    onClose={() => {
+                        setTagEditModalOpen(false);
+                        setSelectedPostForTags(null);
+                    }}
+                    onSave={handleSaveTags}
+                    allPosts={posts}
+                />
+
+                {deleteModalOpen && (
+                    <DeleteConfirmModal
+                        onClose={() => {
+                            setDeleteModalOpen(false);
+                            setPostToDelete(null);
+                        }}
+                        onConfirm={confirmDeletePost}
+                    />
+                )}
+
+                {settingsModalOpen && (
+                    <SettingsModal
+                        onClose={() => setSettingsModalOpen(false)}
+                        sortBy={sortBy}
+                        onSortByChange={setSortBy}
+                        sortReversed={sortReversed}
+                        onToggleReverse={() => setSortReversed(!sortReversed)}
+                        onExport={handleExportData}
+                        onImport={handleImportData}
+                    />
+                )}
+
+                {/* Folder Modals */}
+                <CreateFolderModal
+                    isOpen={createFolderModalOpen}
+                    onClose={() => setCreateFolderModalOpen(false)}
+                    onSave={handleCreateFolder}
+                    existingFolderNames={folders.map((f) => f.name)}
+                />
+
+                <EditFolderModal
+                    folder={selectedFolder}
+                    isOpen={editFolderModalOpen}
+                    onClose={() => {
+                        setEditFolderModalOpen(false);
+                        setSelectedFolder(null);
+                    }}
+                    onSave={handleEditFolder}
+                    existingFolderNames={folders
+                        .filter((f) => f.id !== selectedFolder?.id)
+                        .map((f) => f.name)}
+                />
+
+                <ManageTabsModal
+                    folder={selectedFolder}
+                    allPosts={posts}
+                    isOpen={manageTabsModalOpen}
+                    onClose={() => {
+                        setManageTabsModalOpen(false);
+                        setSelectedFolder(null);
+                    }}
+                    onSave={
+                        manageTabsMode === 'add'
+                            ? handleAddTabsToFolder
+                            : handleRemoveTabsFromFolder
+                    }
+                    mode={manageTabsMode}
+                />
+
+                {/* Confirm Modal */}
+                {confirmModal.isOpen && (
+                    <ConfirmModal
+                        isOpen={true}
+                        type={confirmModal.type}
+                        title={confirmModal.title}
+                        message={confirmModal.message}
+                        {...(confirmModal.confirmText && { confirmText: confirmModal.confirmText })}
+                        {...(confirmModal.cancelText && { cancelText: confirmModal.cancelText })}
+                        {...(confirmModal.denyText && { denyText: confirmModal.denyText })}
+                        {...(confirmModal.showCancel !== undefined && {
+                            showCancel: confirmModal.showCancel,
+                        })}
+                        {...(confirmModal.showDeny !== undefined && {
+                            showDeny: confirmModal.showDeny,
+                        })}
+                        onConfirm={confirmModal.onConfirm}
+                        {...(confirmModal.onCancel && { onCancel: confirmModal.onCancel })}
+                        {...(confirmModal.onDeny && { onDeny: confirmModal.onDeny })}
+                        {...(confirmModal.autoCloseDelay && {
+                            autoCloseDelay: confirmModal.autoCloseDelay,
+                        })}
+                    />
                 )}
             </div>
-            
-            {/* Resize Handle - Fixed at bottom */}
-            <div
-                className={`resize-handle ${isResizing ? 'resizing' : ''}`}
-                onMouseDown={handleResizeStart}
-                title="Drag to resize"
-                style={{
-                    width: '100%',
-                    height: '30px',
-                    background: 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'ns-resize',
-                    flexShrink: 0
-                }}
-            >
-                <img 
-                    src={dotsHorizontalIcon} 
-                    alt="Resize handle" 
-                    className="resize-handle-indicator"
-                    style={{
-                        width: '24px',
-                        height: '24px',
-                        opacity: 0.5,
-                        transition: 'opacity 0.2s ease'
-                    }}
-                />
-            </div>
-
-            <TagEditModal
-                post={selectedPostForTags}
-                isOpen={tagEditModalOpen}
-                onClose={() => {
-                    setTagEditModalOpen(false);
-                    setSelectedPostForTags(null);
-                }}
-                onSave={handleSaveTags}
-                allPosts={posts}
-            />
-
-            {deleteModalOpen && (
-                <DeleteConfirmModal
-                    onClose={() => {
-                        setDeleteModalOpen(false);
-                        setPostToDelete(null);
-                    }}
-                    onConfirm={confirmDeletePost}
-                />
-            )}
-
-            {settingsModalOpen && (
-                <SettingsModal
-                    onClose={() => setSettingsModalOpen(false)}
-                    sortBy={sortBy}
-                    onSortByChange={setSortBy}
-                    sortReversed={sortReversed}
-                    onToggleReverse={() => setSortReversed(!sortReversed)}
-                    onExport={handleExportData}
-                    onImport={handleImportData}
-                />
-            )}
-
-            {/* Folder Modals */}
-            <CreateFolderModal
-                isOpen={createFolderModalOpen}
-                onClose={() => setCreateFolderModalOpen(false)}
-                onSave={handleCreateFolder}
-                existingFolderNames={folders.map(f => f.name)}
-            />
-
-            <EditFolderModal
-                folder={selectedFolder}
-                isOpen={editFolderModalOpen}
-                onClose={() => {
-                    setEditFolderModalOpen(false);
-                    setSelectedFolder(null);
-                }}
-                onSave={handleEditFolder}
-                existingFolderNames={folders.filter(f => f.id !== selectedFolder?.id).map(f => f.name)}
-            />
-
-            <ManageTabsModal
-                folder={selectedFolder}
-                allPosts={posts}
-                isOpen={manageTabsModalOpen}
-                onClose={() => {
-                    setManageTabsModalOpen(false);
-                    setSelectedFolder(null);
-                }}
-                onSave={manageTabsMode === 'add' ? handleAddTabsToFolder : handleRemoveTabsFromFolder}
-                mode={manageTabsMode}
-            />
-
-            {/* Confirm Modal */}
-            {confirmModal.isOpen && (
-                <ConfirmModal
-                    isOpen={true}
-                    type={confirmModal.type}
-                    title={confirmModal.title}
-                    message={confirmModal.message}
-                    {...(confirmModal.confirmText && { confirmText: confirmModal.confirmText })}
-                    {...(confirmModal.cancelText && { cancelText: confirmModal.cancelText })}
-                    {...(confirmModal.denyText && { denyText: confirmModal.denyText })}
-                    {...(confirmModal.showCancel !== undefined && { showCancel: confirmModal.showCancel })}
-                    {...(confirmModal.showDeny !== undefined && { showDeny: confirmModal.showDeny })}
-                    onConfirm={confirmModal.onConfirm}
-                    {...(confirmModal.onCancel && { onCancel: confirmModal.onCancel })}
-                    {...(confirmModal.onDeny && { onDeny: confirmModal.onDeny })}
-                    {...(confirmModal.autoCloseDelay && { autoCloseDelay: confirmModal.autoCloseDelay })}
-                />
-            )}
-        </div>
         </>
     );
 }
