@@ -17,17 +17,17 @@ interface CompactPostItemProps {
     isPinned?: boolean;
 }
 
-function CompactPostItem({ 
-    post, 
-    onDelete, 
-    onClick, 
-    onAddTags, 
-    onSaveNote, 
-    onPinToggle, 
-    isPinned = false 
+function CompactPostItem({
+    post,
+    onDelete,
+    onClick,
+    onAddTags,
+    onSaveNote,
+    onPinToggle,
+    isPinned = false,
 }: CompactPostItemProps) {
     const website = new URL(post.url).hostname.replace('www.', '');
-    
+
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteValue, setNoteValue] = useState(post.notes || '');
     const [isSaving, setIsSaving] = useState(false);
@@ -36,7 +36,7 @@ function CompactPostItem({
     useEffect(() => {
         setNoteValue(post.notes || '');
     }, [post.notes]);
-    
+
     // Use stored favicon or fallback to Google's service
     async function getFaviconUrl(): Promise<string> {
         try {
@@ -86,9 +86,9 @@ function CompactPostItem({
             {/* Pinned Badge */}
             {isPinned && (
                 <div className="absolute top-1 right-1 flex items-center justify-center">
-                    <img 
-                        src={pinIcon} 
-                        alt="Pinned" 
+                    <img
+                        src={pinIcon}
+                        alt="Pinned"
                         className="w-2.5 h-2.5 opacity-60"
                         title="This tab is pinned"
                     />
@@ -136,7 +136,11 @@ function CompactPostItem({
                                 post.notes ? 'bg-white/0' : ''
                             } ${isEditingNote ? 'bg-white/10' : ''}`}
                         >
-                            <img src={noteIcon} alt="Note" className="w-[14px] h-[14px] flex-shrink-0" />
+                            <img
+                                src={noteIcon}
+                                alt="Note"
+                                className="w-[14px] h-[14px] flex-shrink-0"
+                            />
                             {/* Badge indicator when note exists */}
                             {post.notes && (
                                 <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
@@ -147,8 +151,12 @@ function CompactPostItem({
                                     <div className="flex items-center gap-2 mb-2">
                                         <img src={noteIcon} alt="Note" className="w-6 h-6" />
                                         <div className="flex-1 min-w-0 text-left">
-                                            <p className="text-[12px] font-semibold text-white m-0 truncate">{website}</p>
-                                            <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">{post.url}</p>
+                                            <p className="text-[12px] font-semibold text-white m-0 truncate">
+                                                {website}
+                                            </p>
+                                            <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">
+                                                {post.url}
+                                            </p>
                                         </div>
                                     </div>
                                     <hr className="mt-0 mb-2 mx-1 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
@@ -157,29 +165,35 @@ function CompactPostItem({
                                             {post.notes}
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-400 italic m-0">Click to add a note</p>
+                                        <p className="text-xs text-gray-400 italic m-0">
+                                            Click to add a note
+                                        </p>
                                     )}
                                 </div>
                             )}
                         </button>
-                        
+
                         {/* Note Editor Popup */}
                         {isEditingNote && (
                             <>
                                 {/* Backdrop to close on click outside */}
-                                <div 
-                                    className="fixed inset-0 z-40 bg-black/50" 
+                                <div
+                                    className="fixed inset-0 z-40 bg-black/50"
                                     onClick={() => setIsEditingNote(false)}
                                 />
-                                <div 
+                                <div
                                     className="absolute top-full right-0 mt-2 p-2 bg-[#1a1a1a] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl z-50 w-[280px]"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <div className="flex items-center gap-2 mb-3">
                                         <img src={noteIcon} alt="Note" className="w-6 h-6" />
                                         <div className="flex-1 min-w-0 text-left">
-                                            <p className="text-[12px] font-semibold text-white m-0 truncate">{website}</p>
-                                            <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">{post.url}</p>
+                                            <p className="text-[12px] font-semibold text-white m-0 truncate">
+                                                {website}
+                                            </p>
+                                            <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">
+                                                {post.url}
+                                            </p>
                                         </div>
                                     </div>
                                     <hr className="mt-0 mb-3 mx-1 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
@@ -219,7 +233,7 @@ function CompactPostItem({
                 )}
 
                 {/* Dropdown Menu */}
-                <Dropdown panelClassName="!w-[130px]"> 
+                <Dropdown panelClassName="!w-[130px]">
                     {onAddTags && (
                         <button
                             onClick={onAddTags}
@@ -241,11 +255,11 @@ function CompactPostItem({
                             {isPinned ? 'Unpin Tab' : 'Pin Tab'}
                         </button>
                     )}
-                    
+
                     {(onAddTags || onPinToggle) && (
                         <hr className="my-0 mx-4 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
                     )}
-                    
+
                     <button
                         onClick={onDelete}
                         className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 text-[#DB2525] transition-colors hover:bg-white/10"
@@ -261,4 +275,3 @@ function CompactPostItem({
 }
 
 export default CompactPostItem;
-

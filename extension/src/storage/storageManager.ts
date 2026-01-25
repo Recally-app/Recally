@@ -195,14 +195,31 @@ export const StorageManager = {
                 await this.reorderPinnedTabs([]);
             }
 
-            // Import posts
+            // Import posts first
             for (const post of posts) {
                 await activeProvider.importPost(post);
             }
 
-            // Import folders
+            // Import folders and validate post_ids reference existing posts
+            const allPostIds = new Set((await this.getAllPosts()).map((p) => p.id));
             for (const folder of folders) {
-                await activeProvider.importFolder(folder);
+                // Handle backward compatibility: convert old 'posts' array to 'post_ids'
+                let postIds: string[] = [];
+                if ('post_ids' in folder && Array.isArray(folder.post_ids)) {
+                    postIds = folder.post_ids;
+                } else if ('posts' in folder && Array.isArray(folder.posts)) {
+                    // Old format: extract IDs from post objects
+                    postIds = (folder as { posts: { id?: string }[] }).posts
+                        .map((p) => p.id)
+                        .filter((id): id is string => Boolean(id));
+                }
+
+                // Filter out invalid post_ids that don't exist in posts table
+                const validPostIds = postIds.filter((id) => allPostIds.has(id));
+                await activeProvider.importFolder({
+                    ...folder,
+                    post_ids: validPostIds,
+                });
             }
 
             // Import pinned tabs (only valid post IDs)
