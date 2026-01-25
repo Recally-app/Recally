@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { Post } from '../../../shared';
 import dotsHorizontalIcon from '../assets/icon/3-dots-horizontal.svg';
 import editIcon from '../assets/icon/edit-icon.svg';
 import deleteIcon from '../assets/icon/delete-icon.svg';
@@ -7,7 +8,7 @@ import noteIcon from '../assets/icon/note-icon.svg';
 import Dropdown from './dropdown';
 
 interface CompactPostItemProps {
-    post: any;
+    post: Post;
     onDelete: () => void;
     onClick: () => void;
     onAddTags?: () => void;

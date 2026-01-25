@@ -31,7 +31,7 @@ function SavedPostItem({
     onPinToggle,
     isPinned,
 }: {
-    post: any;
+    post: Post;
     isHighlighted?: boolean;
     onDelete: () => void;
     onAddTags: () => void;
@@ -342,11 +342,11 @@ function TagEditModal({
     onSave,
     allPosts,
 }: {
-    post: any | null;
+    post: Post | null;
     isOpen: boolean;
     onClose: () => void;
     onSave: (tags: string[]) => Promise<void>;
-    allPosts: any[];
+    allPosts: Post[];
 }) {
     const [tagsInput, setTagsInput] = useState<string>('');
     const tagInputRef = React.useRef<HTMLInputElement>(null);
@@ -1010,7 +1010,7 @@ export default function PopupApp() {
         }, 1500);
     };
 
-    const handleAddTags = (post: any) => {
+    const handleAddTags = (post: Post) => {
         setSelectedPostForTags(post);
         setTagEditModalOpen(true);
     };
@@ -1677,7 +1677,7 @@ export default function PopupApp() {
                                     <EmptyState />
                                 )
                             ) : (
-                                filteredPosts.map((post: any) => {
+                                filteredPosts.map((post: Post) => {
                                     const isPinned = pinnedTabIds.some((p) => p.id === post.id);
                                     return (
                                         <SavedPostItem
