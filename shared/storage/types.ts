@@ -38,6 +38,13 @@ export interface StorageProvider {
     getPostsByFolderId(folderId: string): Promise<Post[]>;
     removeFolderFromPost(postId: string): Promise<void>;
 
+    // Pinned tabs operations
+    getPinnedTabs(): Promise<Post[]>;
+    pinTab(postId: string): Promise<boolean>;
+    unpinTab(postId: string): Promise<void>;
+    reorderPinnedTabs(newOrder: Post[]): Promise<void>;
+    isPinned(postId: string): Promise<boolean>;
+
     // Import operations
     importPost(post: Post): Promise<void>;
     importFolder(folder: Folder): Promise<void>;

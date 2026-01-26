@@ -111,6 +111,16 @@ async function canonicalizeUrl(url: string): Promise<string> {
     }
 }
 
+async function normalizePinnedOrder(): Promise<void> {
+    const rows = await db.pinned_tabs.orderBy('order').toArray();
+    await db.pinned_tabs.bulkPut(
+        rows.map((row, index) => ({
+            ...row,
+            order: index,
+        }))
+    );
+}
+
 /**
  * LocalStorageProvider
  * Stores all posts in the local Dexie database (IndexedDB).
@@ -198,6 +208,7 @@ export const LocalStorageProvider: StorageProvider = {
 
     async deleteAllPosts(): Promise<void> {
         await db.posts.clear();
+        await db.pinned_tabs.clear();
         const folders = await db.folders.toArray();
         await Promise.all(
             folders.map((folder) => {
@@ -331,7 +342,9 @@ export const LocalStorageProvider: StorageProvider = {
 
                     const updatedFolder: Folder = {
                         ...existingFolder,
-                        post_ids: existingFolder.post_ids.filter((postId) => !postIdSet.has(postId)),
+                        post_ids: existingFolder.post_ids.filter(
+                            (postId) => !postIdSet.has(postId)
+                        ),
                         updated_at: new Date().toISOString(),
                     };
 
@@ -410,6 +423,86 @@ export const LocalStorageProvider: StorageProvider = {
         await Promise.all(
             foldersWithPost.map((folder) => this.removePostFromFolder(folder.id, postId))
         );
+    },
+
+    // ==================== Pinned Tabs Operations ====================
+
+    async getPinnedTabs(): Promise<Post[]> {
+        const rows = await db.pinned_tabs.orderBy('order').toArray();
+        if (rows.length === 0) {
+            return [];
+        }
+
+        const ids = rows.map((row) => row.post_id);
+        const posts = await db.posts.bulkGet(ids);
+        const missingIds: string[] = [];
+        const orderedPosts: Post[] = [];
+
+        posts.forEach((post, index) => {
+            if (post) {
+                orderedPosts.push(post);
+            } else {
+                missingIds.push(ids[index]);
+            }
+        });
+
+        if (missingIds.length > 0) {
+            await db.pinned_tabs.bulkDelete(missingIds);
+            await normalizePinnedOrder();
+        }
+
+        return orderedPosts;
+    },
+
+    async pinTab(postId: string): Promise<boolean> {
+        const existing = await db.pinned_tabs.get(postId);
+        if (existing) {
+            return true;
+        }
+
+        const post = await db.posts.get(postId);
+        if (!post) {
+            return false;
+        }
+
+        const count = await db.pinned_tabs.count();
+        if (count >= 5) {
+            return false;
+        }
+
+        const last = await db.pinned_tabs.orderBy('order').last();
+        const nextOrder = last ? last.order + 1 : 0;
+
+        await db.pinned_tabs.put({ post_id: postId, order: nextOrder });
+        return true;
+    },
+
+    async unpinTab(postId: string): Promise<void> {
+        await db.pinned_tabs.delete(postId);
+        await normalizePinnedOrder();
+    },
+
+    async reorderPinnedTabs(newOrder: Post[]): Promise<void> {
+        const orderedIds = newOrder.map((post) => post.id);
+        const existing = await db.pinned_tabs.toArray();
+        const existingIds = existing.map((row) => row.post_id);
+        const idsToDelete = existingIds.filter((id) => !orderedIds.includes(id));
+
+        if (idsToDelete.length > 0) {
+            await db.pinned_tabs.bulkDelete(idsToDelete);
+        }
+
+        await db.pinned_tabs.bulkPut(
+            orderedIds.map((id, index) => ({
+                post_id: id,
+                order: index,
+            }))
+        );
+    },
+
+    async isPinned(postId: string): Promise<boolean> {
+        const existing = await db.pinned_tabs.get(postId);
+        return Boolean(existing);
     },
 
     // ==================== Import Operations ====================

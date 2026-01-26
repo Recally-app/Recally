@@ -32,7 +32,8 @@ export default function PinnedTabPill({
     const website = hostname || 'unknown';
 
     // Get favicon URL
-    const faviconUrl = post.favicon_url || (hostname ? `https://icons.duckduckgo.com/ip3/${hostname}.ico` : '');
+    const faviconUrl =
+        post.favicon_url || (hostname ? `https://icons.duckduckgo.com/ip3/${hostname}.ico` : '');
 
     return (
         <div
@@ -85,17 +86,17 @@ export default function PinnedTabPill({
                         transition-opacity duration-150 hover:opacity-70"
                     title="Unpin tab"
                 >
-                    <svg 
-                        className="w-2.5 h-2.5 text-white opacity-80" 
-                        fill="none" 
-                        stroke="currentColor" 
+                    <svg
+                        className="w-2.5 h-2.5 text-white opacity-80"
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
-                        <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={3} 
-                            d="M6 18L18 6M6 6l12 12" 
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M6 18L18 6M6 6l12 12"
                         />
                     </svg>
                 </button>

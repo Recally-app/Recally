@@ -1245,9 +1245,8 @@ export default function PopupApp() {
                         try {
                             const folder = folders.find((f) => f.id === folderId);
                             if (folder) {
-                                const folderPosts = await StorageManager.getPostsByFolderId(
-                                    folderId
-                                );
+                                const folderPosts =
+                                    await StorageManager.getPostsByFolderId(folderId);
                                 for (const post of folderPosts) {
                                     const isPinned = await StorageManager.isPinned(post.id);
                                     if (isPinned) {

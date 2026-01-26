@@ -61,120 +61,31 @@ export const StorageManager = {
     },
 
     // ==================== Pinned Tabs Operations ====================
-    async getPinnedTabIds(): Promise<string[]> {
-        return new Promise((resolve) => {
-            chrome.storage.local.get(['pinnedTabs'], (result) => {
-                try {
-                    const pinnedData = result.pinnedTabs || [];
-                    let pinnedIds: string[] = [];
-
-                    if (Array.isArray(pinnedData) && pinnedData.length > 0) {
-                        if (typeof pinnedData[0] === 'string') {
-                            pinnedIds = pinnedData as string[];
-                        } else if (typeof pinnedData[0] === 'object') {
-                            pinnedIds = (pinnedData as Post[])
-                                .map((post) => post.id)
-                                .filter((id): id is string => Boolean(id));
-                        }
-                    }
-
-                    // Normalize storage to IDs if needed
-                    if (!Array.isArray(pinnedData) || typeof pinnedData[0] !== 'string') {
-                        chrome.storage.local.set({ pinnedTabs: pinnedIds }, () => {
-                            resolve(pinnedIds);
-                        });
-                    } else {
-                        resolve(pinnedIds);
-                    }
-                } catch (error) {
-                    console.error('Error in getPinnedTabIds:', error);
-                    resolve([]);
-                }
-            });
-        });
-    },
-
-    async setPinnedTabIds(ids: string[]): Promise<void> {
-        return new Promise((resolve) => {
-            chrome.storage.local.set({ pinnedTabs: ids }, () => {
-                resolve();
-            });
-        });
-    },
-
     async getPinnedTabs(): Promise<Post[]> {
-        try {
-            const pinnedIds = await this.getPinnedTabIds();
-            if (pinnedIds.length === 0) {
-                return [];
-            }
-
-            const allPosts = await activeProvider.getAllPosts();
-            const postsById = new Map(allPosts.map((post) => [post.id, post]));
-            const orderedPosts = pinnedIds
-                .map((id) => postsById.get(id))
-                .filter((post): post is Post => Boolean(post));
-
-            if (orderedPosts.length !== pinnedIds.length) {
-                await this.setPinnedTabIds(orderedPosts.map((post) => post.id));
-            }
-
-            return orderedPosts;
-        } catch (error) {
-            console.error('Error in getPinnedTabs:', error);
-            return [];
-        }
+        return activeProvider.getPinnedTabs();
     },
 
     async pinTab(postId: string): Promise<boolean> {
-        const pinnedIds = await this.getPinnedTabIds();
-
-        // Check if already pinned
-        if (pinnedIds.includes(postId)) {
-            return true;
-        }
-
-        // Check limit
-        if (pinnedIds.length >= 5) {
-            return false;
-        }
-
-        // Get the full Post object
-        const post = await activeProvider
-            .getAllPosts()
-            .then((posts) => posts.find((p) => p.id === postId));
-
-        if (!post) {
-            return false;
-        }
-
-        // Add to pinned tabs
-        const updatedPinnedIds = [...pinnedIds, post.id];
-        await this.setPinnedTabIds(updatedPinnedIds);
-        return true;
+        return activeProvider.pinTab(postId);
     },
 
     async unpinTab(postId: string): Promise<void> {
-        const pinnedIds = await this.getPinnedTabIds();
-        const updatedPinnedIds = pinnedIds.filter((id) => id !== postId);
-        await this.setPinnedTabIds(updatedPinnedIds);
+        return activeProvider.unpinTab(postId);
     },
 
     async reorderPinnedTabs(newOrder: Post[]): Promise<void> {
-        const orderedIds = newOrder.map((post) => post.id);
-        await this.setPinnedTabIds(orderedIds);
+        return activeProvider.reorderPinnedTabs(newOrder);
     },
 
     async isPinned(postId: string): Promise<boolean> {
-        const pinnedIds = await this.getPinnedTabIds();
-        return pinnedIds.includes(postId);
+        return activeProvider.isPinned(postId);
     },
 
     // ==================== Import/Export Operations ====================
     async exportData(): Promise<string> {
         const posts = await this.getAllPosts();
         const folders = await this.getAllFolders();
-        const pinnedTabs = await this.getPinnedTabIds();
+        const pinnedTabs = (await this.getPinnedTabs()).map((post) => post.id);
 
         const exportData = {
             version: '1.0.0',
@@ -264,9 +175,14 @@ export const StorageManager = {
             };
 
             const importedIds = normalizePinnedIds();
+            const postsById = new Map(allPosts.map((post) => [post.id, post]));
+            const toPosts = (ids: string[]) =>
+                ids
+                    .map((id) => postsById.get(id))
+                    .filter((post): post is Post => Boolean(post));
 
             if (mode === 'merge') {
-                const existingPinnedIds = await this.getPinnedTabIds();
+                const existingPinnedIds = (await this.getPinnedTabs()).map((post) => post.id);
                 const seenIds = new Set<string>();
                 const combinedIds = [...existingPinnedIds, ...importedIds]
                     .filter((id) => {
@@ -278,13 +194,11 @@ export const StorageManager = {
                     })
                     .slice(0, 5);
 
-                await this.setPinnedTabIds(combinedIds);
+                await this.reorderPinnedTabs(toPosts(combinedIds));
             } else {
-                const validPinnedIds = importedIds
-                    .filter((id) => validPostIds.has(id))
-                    .slice(0, 5);
+                const validPinnedIds = importedIds.filter((id) => validPostIds.has(id)).slice(0, 5);
 
-                await this.setPinnedTabIds(validPinnedIds);
+                await this.reorderPinnedTabs(toPosts(validPinnedIds));
             }
         } catch (error) {
             console.error('Import failed:', error);
