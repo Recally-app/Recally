@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getHostname } from '../utils/urlUtils';
 
 interface PinnedTabPillProps {
     post: {
@@ -27,10 +28,11 @@ export default function PinnedTabPill({
     isDragging = false,
 }: PinnedTabPillProps) {
     const [isHovered, setIsHovered] = useState(false);
-    const website = new URL(post.url).hostname.replace('www.', '');
+    const hostname = getHostname(post.url);
+    const website = hostname || 'unknown';
 
     // Get favicon URL
-    const faviconUrl = post.favicon_url || `https://icons.duckduckgo.com/ip3/${new URL(post.url).hostname}.ico`;
+    const faviconUrl = post.favicon_url || (hostname ? `https://icons.duckduckgo.com/ip3/${hostname}.ico` : '');
 
     return (
         <div
@@ -50,14 +52,16 @@ export default function PinnedTabPill({
             title={`${post.title} - ${post.url}`}
         >
             {/* Favicon */}
-            <img
-                src={faviconUrl}
-                alt={website}
-                className="w-3 h-3 flex-shrink-0 rounded-sm"
-                onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                }}
-            />
+            {faviconUrl && (
+                <img
+                    src={faviconUrl}
+                    alt={website}
+                    className="w-3 h-3 flex-shrink-0 rounded-sm"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
+                />
+            )}
 
             {/* Title (clickable) */}
             <button
@@ -99,4 +103,3 @@ export default function PinnedTabPill({
         </div>
     );
 }
-

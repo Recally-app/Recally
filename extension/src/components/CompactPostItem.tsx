@@ -6,6 +6,7 @@ import deleteIcon from '../assets/icon/delete-icon.svg';
 import pinIcon from '../assets/icon/pin-icon.svg';
 import noteIcon from '../assets/icon/note-icon.svg';
 import Dropdown from './dropdown';
+import { getHostname } from '../utils/urlUtils';
 
 interface CompactPostItemProps {
     post: Post;
@@ -26,7 +27,7 @@ function CompactPostItem({
     onPinToggle,
     isPinned = false,
 }: CompactPostItemProps) {
-    const website = new URL(post.url).hostname.replace('www.', '');
+    const website = getHostname(post.url);
 
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteValue, setNoteValue] = useState(post.notes || '');
@@ -42,7 +43,11 @@ function CompactPostItem({
         try {
             if (post.favicon_url) return post.favicon_url;
 
-            const { hostname } = new URL(post.url);
+            const hostname = getHostname(post.url);
+            if (!hostname) {
+                return '';
+            }
+
             const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
 
             const res = await fetch(ddgUrl);

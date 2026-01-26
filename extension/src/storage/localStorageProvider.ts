@@ -198,6 +198,22 @@ export const LocalStorageProvider: StorageProvider = {
 
     async deleteAllPosts(): Promise<void> {
         await db.posts.clear();
+        const folders = await db.folders.toArray();
+        await Promise.all(
+            folders.map((folder) => {
+                if (folder.post_ids.length === 0) {
+                    return Promise.resolve();
+                }
+
+                const updatedFolder: Folder = {
+                    ...folder,
+                    post_ids: [],
+                    updated_at: new Date().toISOString(),
+                };
+
+                return db.folders.put(updatedFolder);
+            })
+        );
     },
 
     async searchPosts(query: string): Promise<Post[]> {
@@ -239,8 +255,9 @@ export const LocalStorageProvider: StorageProvider = {
             };
         }
 
+        const uniquePostIds = Array.from(new Set(postIds));
         const validPostIds = await Promise.all(
-            postIds.map(async (postId) => {
+            uniquePostIds.map(async (postId) => {
                 const post = await db.posts.get(postId);
                 return post ? postId : null;
             })
@@ -303,6 +320,25 @@ export const LocalStorageProvider: StorageProvider = {
         }
 
         if (deleteContainedPosts && folder.post_ids.length > 0) {
+            const postIdSet = new Set(folder.post_ids);
+            const allFolders = await db.folders.toArray();
+
+            await Promise.all(
+                allFolders.map((existingFolder) => {
+                    if (!existingFolder.post_ids.some((postId) => postIdSet.has(postId))) {
+                        return Promise.resolve();
+                    }
+
+                    const updatedFolder: Folder = {
+                        ...existingFolder,
+                        post_ids: existingFolder.post_ids.filter((postId) => !postIdSet.has(postId)),
+                        updated_at: new Date().toISOString(),
+                    };
+
+                    return db.folders.put(updatedFolder);
+                })
+            );
+
             await Promise.all(folder.post_ids.map((postId) => db.posts.delete(postId)));
         }
 

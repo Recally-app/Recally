@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Post, Folder } from '../../../shared';
+import { getHostname } from '../utils/urlUtils';
 
 // Dynamic Folder Icon Component with Gradient
 function FolderIconSVG({ color, className = '' }: { color: string; className?: string }) {
@@ -182,7 +183,7 @@ export default function ManageTabsModal({
                     ) : (
                         <div className="space-y-2">
                             {filteredPosts.map((post) => {
-                                const website = new URL(post.url).hostname.replace('www.', '');
+                                const website = getHostname(post.url) || 'unknown';
                                 const isSelected = selectedPostIds.has(post.id);
 
                                 return (

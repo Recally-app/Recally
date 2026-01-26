@@ -9,6 +9,7 @@ import pinIcon from '../assets/icon/pin-icon.svg';
 import noteIcon from '../assets/icon/note-icon.svg';
 import listIcon from '../assets/icon/list-icon.svg';
 import folderIcon from '../assets/icon/folder-icon.svg';
+import { isSupportedUrl } from '../utils/urlUtils';
 import { StorageManager } from '../storage/storageManager';
 import Dropdown from '../components/dropdown';
 import SavedFolderItem from '../components/SavedFolderItem';
@@ -957,7 +958,7 @@ export default function PopupApp() {
         setExistingPostId(null);
 
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab?.url || !tab?.title) {
+        if (!tab?.url || !tab?.title || !isSupportedUrl(tab.url)) {
             console.error('Save failed: could not retrieve tab url or title');
             setSaveStatus(SaveStatus.Error);
         } else {
@@ -1124,12 +1125,7 @@ export default function PopupApp() {
             // If user wants to add all open tabs, get them first
             if (addAllOpenTabs) {
                 const tabs = await chrome.tabs.query({ currentWindow: true });
-                const validTabs = tabs.filter(
-                    (tab) =>
-                        tab.url &&
-                        !tab.url.startsWith('chrome://') &&
-                        !tab.url.startsWith('chrome-extension://')
-                );
+                const validTabs = tabs.filter((tab) => tab.url && isSupportedUrl(tab.url));
 
                 // Save each tab as a post if not already saved
                 const savedPosts = await Promise.all(
@@ -1147,7 +1143,8 @@ export default function PopupApp() {
                     })
                 );
 
-                postIds = savedPosts.filter((id): id is string => id !== null);
+                const uniqueIds = new Set(savedPosts.filter((id): id is string => id !== null));
+                postIds = Array.from(uniqueIds);
 
                 // Refresh posts list if we added any
                 if (postIds.length > 0) {
@@ -1209,7 +1206,8 @@ export default function PopupApp() {
         showConfirmModal({
             type: 'warning',
             title: 'Delete Folder',
-            message: 'Do you want to delete the folder only or also delete all tabs inside?',
+            message:
+                'Do you want to delete the folder only or also delete all tabs inside? Deleting tabs will remove them from all folders and lists.',
             confirmText: 'Delete Folder Only',
             denyText: 'Delete Folder & Tabs',
             cancelText: 'Cancel',
@@ -1234,33 +1232,47 @@ export default function PopupApp() {
             },
             onDeny: async () => {
                 closeConfirmModal();
-                // Delete folder and all posts
-                try {
-                    const folder = folders.find((f) => f.id === folderId);
-                    if (folder) {
-                        const folderPosts = await StorageManager.getPostsByFolderId(folderId);
-                        for (const post of folderPosts) {
-                            const isPinned = await StorageManager.isPinned(post.id);
-                            if (isPinned) {
-                                await StorageManager.unpinTab(post.id);
+                showConfirmModal({
+                    type: 'warning',
+                    title: 'Delete Folder & Tabs',
+                    message:
+                        'This will delete the tabs in this folder everywhere (all folders and lists). This cannot be undone.',
+                    confirmText: 'Delete Everywhere',
+                    cancelText: 'Cancel',
+                    showCancel: true,
+                    onConfirm: async () => {
+                        closeConfirmModal();
+                        try {
+                            const folder = folders.find((f) => f.id === folderId);
+                            if (folder) {
+                                const folderPosts = await StorageManager.getPostsByFolderId(
+                                    folderId
+                                );
+                                for (const post of folderPosts) {
+                                    const isPinned = await StorageManager.isPinned(post.id);
+                                    if (isPinned) {
+                                        await StorageManager.unpinTab(post.id);
+                                    }
+                                }
                             }
-                        }
-                    }
 
-                    await StorageManager.deleteFolder(folderId, true);
-                    await fetchFolders();
-                    await fetchPosts();
-                    await fetchPinnedTabs();
-                } catch (error) {
-                    console.error('Failed to delete folder and posts:', error);
-                    showConfirmModal({
-                        type: 'error',
-                        title: 'Deletion Failed',
-                        message: 'Could not delete folder and tabs. Please try again.',
-                        confirmText: 'OK',
-                        onConfirm: closeConfirmModal,
-                    });
-                }
+                            await StorageManager.deleteFolder(folderId, true);
+                            await fetchFolders();
+                            await fetchPosts();
+                            await fetchPinnedTabs();
+                        } catch (error) {
+                            console.error('Failed to delete folder and posts:', error);
+                            showConfirmModal({
+                                type: 'error',
+                                title: 'Deletion Failed',
+                                message: 'Could not delete folder and tabs. Please try again.',
+                                confirmText: 'OK',
+                                onConfirm: closeConfirmModal,
+                            });
+                        }
+                    },
+                    onCancel: closeConfirmModal,
+                });
             },
             onCancel: closeConfirmModal,
         });
