@@ -1,5 +1,5 @@
 import '../styles/index.css';
-import PopupApp from './Popup.tsx';
+import PopupApp from './popup';
 
 export default function App() {
     return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, ReactNode, FC } from 'react';
-import { FaPencilAlt } from 'react-icons/fa';
+import { createPortal } from 'react-dom';
+import threeDotsVertical from '../assets/icon/3-dots-vertical.svg';
 
 type DropdownProps = {
     children: ReactNode;
@@ -9,16 +10,40 @@ type DropdownProps = {
 
 const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName = '' }) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [position, setPosition] = useState({ top: 0, left: 0 });
 
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
     /**
      * Closes the dropdown if a click is detected *outside* of it.
      */
     const handleClickOutside = (event: MouseEvent) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+            buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
             setIsOpen(false);
         }
+    };
+
+    /**
+     * Calculate dropdown position relative to button
+     */
+    const updatePosition = () => {
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setPosition({
+                top: rect.bottom + window.scrollY,
+                left: rect.right + window.scrollX - 120, // 120px is dropdown width
+            });
+        }
+    };
+
+    // Toggle dropdown and update position
+    const handleToggle = () => {
+        if (!isOpen) {
+            updatePosition();
+        }
+        setIsOpen(!isOpen);
     };
 
     // Add event listener to the document when the component mounts
@@ -33,34 +58,37 @@ const Dropdown: FC<DropdownProps> = ({ children, className = '', panelClassName 
     }, []);
 
     const panelClasses = `
-    absolute right-0 translate-x-full rounded-md bg-[#113F67] text-white w-fit z-50  ${panelClassName}`;
+    fixed rounded-md bg-[#1a1a1a] border border-[rgba(255,255,255,.2)] text-white w-[120px] shadow-lg z-[9999] ${panelClassName}`;
 
     return (
-        <div ref={dropdownRef} className={` ${className}`}>
+        <div className={`relative ${className}`}>
             <div title="Actions">
                 <button
+                    ref={buttonRef}
                     type="button"
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="inline-flex w-full justify-center px-4 py-2 text-xs font-bold text-black"
+                    onClick={handleToggle}
+                    className="inline-flex w-full justify-center pr-0 py-2 text-xs font-bold text-black"
                 >
-                    <FaPencilAlt color="#FFFFFF" />
+                    <img src={threeDotsVertical} alt="Actions" className="w-4 h-4" />
                 </button>
             </div>
 
-            {isOpen && (
+            {isOpen && createPortal(
                 <div
-                    className="absolute left-4/5 top-4/5 ml-2 z-50"
+                    ref={dropdownRef}
+                    className={panelClasses}
+                    style={{
+                        top: `${position.top}px`,
+                        left: `${position.left}px`,
+                    }}
                     onMouseLeave={() => setIsOpen(false)}
+                    role="menu"
+                    aria-orientation="vertical"
+                    onClick={() => setIsOpen(false)}
                 >
-                    <div
-                        className={panelClasses}
-                        role="menu"
-                        aria-orientation="vertical"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        {children}
-                    </div>
-                </div>
+                    {children}
+                </div>,
+                document.body
             )}
         </div>
     );

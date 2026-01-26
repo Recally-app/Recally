@@ -9,9 +9,9 @@ export default defineManifest({
 
     action: {
         default_icon: {
-            16: 'src/assets/icon/favicon-16.png',
-            32: 'src/assets/icon/favicon-32.png',
-            48: 'src/assets/icon/favicon-48.png',
+            16: 'src/assets/icon/recally-icon-16.png',
+            32: 'src/assets/icon/recally-icon-32.png',
+            48: 'src/assets/icon/recally-icon-48.png',
         },
         default_popup: 'src/popup/index.html',
     },
@@ -22,10 +22,10 @@ export default defineManifest({
     },
 
     icons: {
-        16: 'src/assets/icon/favicon-16.png',
-        32: 'src/assets/icon/favicon-32.png',
-        48: 'src/assets/icon/favicon-48.png',
-        128: 'src/assets/icon/favicon-128.png',
+        16: 'src/assets/icon/recally-icon-16.png',
+        32: 'src/assets/icon/recally-icon-32.png',
+        48: 'src/assets/icon/recally-icon-48.png',
+        128: 'src/assets/icon/recally-icon-128.png',
     },
 
     permissions: ['storage', 'tabs'],

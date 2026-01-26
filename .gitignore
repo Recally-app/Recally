@@ -5,3 +5,8 @@ node_modules/
 # Lefthook
 /run/
 .git/hooks/
+
+# Shared build artifacts
+shared/**/*.js
+shared/**/*.d.ts
+shared/**/*.map
