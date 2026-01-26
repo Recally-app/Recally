@@ -31,12 +31,12 @@ export interface StorageProvider {
     updateFolder(id: string, updates: Partial<Omit<Folder, 'id' | 'created_at'>>): Promise<Folder>;
     deleteFolder(id: string, deleteContainedPosts?: boolean): Promise<void>;
     getAllFolders(): Promise<Folder[]>;
-    
+
     // Folder-Post operations
     addPostToFolder(folderId: string, postId: string): Promise<Folder>;
     removePostFromFolder(folderId: string, postId: string): Promise<Folder>;
     getPostsByFolderId(folderId: string): Promise<Post[]>;
-    removeFolderFromPost(postId: string): Promise<void>;
+    removePostFromAllFolders(postId: string): Promise<void>;
 
     // Pinned tabs operations
     getPinnedTabs(): Promise<Post[]>;

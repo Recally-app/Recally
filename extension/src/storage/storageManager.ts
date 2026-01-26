@@ -56,8 +56,8 @@ export const StorageManager = {
     async getPostsByFolderId(folderId: string) {
         return activeProvider.getPostsByFolderId(folderId);
     },
-    async removeFolderFromPost(postId: string) {
-        return activeProvider.removeFolderFromPost(postId);
+    async removePostFromAllFolders(postId: string) {
+        return activeProvider.removePostFromAllFolders(postId);
     },
 
     // ==================== Pinned Tabs Operations ====================
@@ -177,9 +177,7 @@ export const StorageManager = {
             const importedIds = normalizePinnedIds();
             const postsById = new Map(allPosts.map((post) => [post.id, post]));
             const toPosts = (ids: string[]) =>
-                ids
-                    .map((id) => postsById.get(id))
-                    .filter((post): post is Post => Boolean(post));
+                ids.map((id) => postsById.get(id)).filter((post): post is Post => Boolean(post));
 
             if (mode === 'merge') {
                 const existingPinnedIds = (await this.getPinnedTabs()).map((post) => post.id);

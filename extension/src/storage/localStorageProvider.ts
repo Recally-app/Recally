@@ -203,6 +203,8 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async deletePost(id: string): Promise<void> {
+        await db.pinned_tabs.delete(id);
+        await this.removePostFromAllFolders(id);
         await db.posts.delete(id);
     },
 
@@ -416,7 +418,7 @@ export const LocalStorageProvider: StorageProvider = {
         return posts.filter((post): post is Post => post !== undefined);
     },
 
-    async removeFolderFromPost(postId: string): Promise<void> {
+    async removePostFromAllFolders(postId: string): Promise<void> {
         const allFolders = await db.folders.toArray();
         const foldersWithPost = allFolders.filter((folder) => folder.post_ids.includes(postId));
 
