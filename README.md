@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/Recally-app/Recally/raw/dev/branding/logo/recally-logo-primary.png" alt="Recally logo" />
+  <img src="branding/demo.gif" alt="Recally extension demo" />
 </p>
 <p align="center">Save what you read. Recall when it matters.</p>
 
@@ -207,4 +207,3 @@ npm run lint:fix
 - Use VS Code with the official ESLint extension installed.
 - Enable “Auto Fix on Save” to automatically apply lint fixes while you code.
 - Run npm run lint before committing changes to ensure code consistency.
-
