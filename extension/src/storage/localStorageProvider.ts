@@ -355,6 +355,7 @@ export const LocalStorageProvider: StorageProvider = {
             );
 
             await Promise.all(folder.post_ids.map((postId) => db.posts.delete(postId)));
+            await db.pinned_tabs.bulkDelete(folder.post_ids);
         }
 
         await db.folders.delete(id);
