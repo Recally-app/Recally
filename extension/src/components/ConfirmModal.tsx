@@ -20,7 +20,7 @@ interface ConfirmModalProps {
 
 const typeIcons: Record<ConfirmModalType, string> = {
     info: '💡',
-    warning: '⚠️',
+    warning: 'warning',
     success: '✓',
     error: '✕',
     question: '?',

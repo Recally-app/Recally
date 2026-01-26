@@ -68,7 +68,7 @@ function SavedPostItem({
             const blob = await res.blob();
             return URL.createObjectURL(blob);
         } catch (err) {
-            console.warn('⚠️ Favicon fetch failed:', err);
+            console.warn('Favicon fetch failed:', err);
             return ''; // later return default image
         }
     }
