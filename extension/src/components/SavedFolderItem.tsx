@@ -10,7 +10,6 @@ import addIcon from '../assets/icon/add-icon.svg';
 import removeIcon from '../assets/icon/remove-icon.svg';
 import Dropdown from './dropdown';
 
-
 interface SavedFolderItemProps {
     folder: Folder;
     onDelete: () => void;

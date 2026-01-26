@@ -36,14 +36,14 @@ export default function CreateFolderModal({
 
     const handleSave = async () => {
         const trimmedName = folderName.trim();
-        
+
         if (!trimmedName) {
             setError('Folder name cannot be empty');
             return;
         }
 
         // Check for duplicate names
-        if (existingFolderNames.some(name => name?.toLowerCase() === trimmedName.toLowerCase())) {
+        if (existingFolderNames.some((name) => name?.toLowerCase() === trimmedName.toLowerCase())) {
             setError('A folder with this name already exists');
             return;
         }
@@ -104,9 +104,7 @@ export default function CreateFolderModal({
                         placeholder="Enter folder name..."
                         className="w-full rounded border border-[rgba(255,255,255,.25)] bg-[rgba(255,255,255,.15)] px-3 py-2 text-[rgba(255,255,255,.9)] placeholder:text-[rgba(255,255,255,.5)] focus:outline-none focus:ring-1 focus:ring-[rgba(255,255,255,.25)]"
                     />
-                    {error && (
-                        <p className="mt-2 text-xs text-red-400">{error}</p>
-                    )}
+                    {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
                 </div>
 
                 {/* Color Picker */}
@@ -157,4 +155,3 @@ export default function CreateFolderModal({
         </div>
     );
 }
-

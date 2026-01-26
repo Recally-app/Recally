@@ -27,30 +27,30 @@ const typeIcons: Record<ConfirmModalType, string> = {
 };
 
 const typeColors: Record<ConfirmModalType, { bg: string; text: string; icon: string }> = {
-    info: { 
-        bg: 'bg-[#146FCF]', 
+    info: {
+        bg: 'bg-[#146FCF]',
         text: 'text-[#146FCF]',
-        icon: 'bg-[#146FCF]'
+        icon: 'bg-[#146FCF]',
     },
-    warning: { 
-        bg: 'bg-[#F59E0B]', 
+    warning: {
+        bg: 'bg-[#F59E0B]',
         text: 'text-[#F59E0B]',
-        icon: 'bg-[#F59E0B]'
+        icon: 'bg-[#F59E0B]',
     },
-    success: { 
-        bg: 'bg-[#10B981]', 
+    success: {
+        bg: 'bg-[#10B981]',
         text: 'text-[#10B981]',
-        icon: 'bg-[#10B981]'
+        icon: 'bg-[#10B981]',
     },
-    error: { 
-        bg: 'bg-[#DB2525]', 
+    error: {
+        bg: 'bg-[#DB2525]',
         text: 'text-[#DB2525]',
-        icon: 'bg-[#DB2525]'
+        icon: 'bg-[#DB2525]',
     },
-    question: { 
-        bg: 'bg-[#146FCF]', 
+    question: {
+        bg: 'bg-[#146FCF]',
         text: 'text-[#146FCF]',
-        icon: 'bg-[#146FCF]'
+        icon: 'bg-[#146FCF]',
     },
 };
 
@@ -102,7 +102,9 @@ export default function ConfirmModal({
             >
                 {/* Icon and Title */}
                 <div className="flex flex-col items-center text-center mb-4">
-                    <div className={`w-14 h-14 rounded-full ${colors.icon} flex items-center justify-center mb-3 text-white text-2xl font-bold`}>
+                    <div
+                        className={`w-14 h-14 rounded-full ${colors.icon} flex items-center justify-center mb-3 text-white text-2xl font-bold`}
+                    >
                         {typeIcons[type]}
                     </div>
                     <h2 className="text-white text-xl font-bold m-0">{title}</h2>
@@ -125,7 +127,7 @@ export default function ConfirmModal({
                             {denyText}
                         </button>
                     )}
-                    
+
                     <button
                         onClick={onConfirm}
                         className={`rounded w-full ${colors.bg} px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity`}
@@ -146,4 +148,3 @@ export default function ConfirmModal({
         </div>
     );
 }
-
