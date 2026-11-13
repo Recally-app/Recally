@@ -510,6 +510,67 @@ export const LocalStorageProvider: StorageProvider = {
 
     // ==================== Import Operations ====================
 
+    async importData(data, mode): Promise<void> {
+        await db.transaction('rw', db.posts, db.folders, db.pinned_tabs, async () => {
+            const posts = mode === 'merge' ? await db.posts.toArray() : [];
+            const folders = mode === 'merge' ? await db.folders.toArray() : [];
+            const pins = mode === 'merge' ? await db.pinned_tabs.orderBy('order').toArray() : [];
+            const postIds = new Set(posts.map((post) => post.id));
+            const postsByUrl = new Map(posts.map((post) => [new URL(post.url).toString(), post]));
+            const remappedIds = new Map<string, string>();
+
+            for (const imported of data.posts) {
+                const existing =
+                    mode === 'merge' ? postsByUrl.get(new URL(imported.url).toString()) : undefined;
+                if (existing) {
+                    // Merge keeps local edits and maps imported references to the local post.
+                    remappedIds.set(imported.id, existing.id);
+                    continue;
+                }
+                const id = postIds.has(imported.id) ? uuidv4() : imported.id;
+                const post = { ...imported, id };
+                posts.push(post);
+                postIds.add(id);
+                postsByUrl.set(new URL(post.url).toString(), post);
+                remappedIds.set(imported.id, id);
+            }
+
+            const resolvePostId = (id: string): string => {
+                const resolved = remappedIds.get(id) ?? id;
+                if (!postIds.has(resolved))
+                    throw new Error('Invalid backup: missing referenced post');
+                return resolved;
+            };
+            const folderIds = new Set(folders.map((folder) => folder.id));
+            for (const imported of data.folders) {
+                const ids = imported.post_ids.map(resolvePostId);
+                const existing = folders.find(
+                    (folder) =>
+                        folder.name.trim().toLowerCase() === imported.name.trim().toLowerCase()
+                );
+                if (existing) {
+                    existing.post_ids = [...new Set([...existing.post_ids, ...ids])];
+                    continue;
+                }
+                const id = folderIds.has(imported.id) ? uuidv4() : imported.id;
+                folders.push({ ...imported, id, post_ids: [...new Set(ids)] });
+                folderIds.add(id);
+            }
+            // Validate every reference before clearing anything, even pins beyond the limit.
+            const importedPins = data.pinnedTabs.map(resolvePostId);
+            const pinnedIds = [...new Set([...pins.map((pin) => pin.post_id), ...importedPins])]
+                .filter((id) => postIds.has(id))
+                .slice(0, 5);
+
+            await db.posts.clear();
+            await db.folders.clear();
+            await db.pinned_tabs.clear();
+            await db.posts.bulkPut(posts);
+            await db.folders.bulkPut(folders);
+            await db.pinned_tabs.bulkPut(pinnedIds.map((post_id, order) => ({ post_id, order })));
+        });
+    },
+
     async importPost(post: Post): Promise<void> {
         // Import post as-is, preserving IDs and timestamps
         await db.posts.put(post);
