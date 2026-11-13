@@ -1,3 +1,4 @@
+import localSiteIcon from '../assets/icon/recally_icon.svg';
 import React, { useState, useEffect } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import recallyIcon from '../assets/icon/recally_icon.svg';
@@ -55,48 +56,8 @@ function SavedPostItem({
         chrome.tabs.create({ url: post.url });
     };
 
-    // Use stored favicon or fallback to Google's service
-    async function getFaviconUrl(): Promise<string> {
-        try {
-            if (post.favicon_url) return post.favicon_url;
-
-            const { hostname } = new URL(post.url);
-            const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
-
-            const res = await fetch(ddgUrl);
-            if (!res.ok) throw new Error(`favicon not found for ${hostname}`);
-
-            const blob = await res.blob();
-            return URL.createObjectURL(blob);
-        } catch (err) {
-            console.warn('Favicon fetch failed:', err);
-            return ''; // later return default image
-        }
-    }
-
-    const [faviconUrl, setFaviconUrl] = useState<string>('');
-
-    useEffect(() => {
-        let objectUrl: string | null = null;
-
-        (async () => {
-            const resolved = await getFaviconUrl();
-            setFaviconUrl(resolved);
-
-            // Track it so we can clean up later
-            if (resolved.startsWith('blob:')) {
-                objectUrl = resolved;
-            }
-        })();
-
-        // Cleanup for blobs
-        return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
-        };
-    }, [post.url, post.favicon_url]);
+    // Bundled icons keep library rendering offline.
+    const faviconUrl = localSiteIcon;
 
     return (
         <li
@@ -963,9 +924,7 @@ export default function PopupApp() {
             setSaveStatus(SaveStatus.Error);
         } else {
             try {
-                // Get favicon from tab
-                const faviconUrl = tab.favIconUrl || undefined;
-                const result = await StorageManager.savePost(tab.url, tab.title, [], faviconUrl);
+                const result = await StorageManager.savePost(tab.url, tab.title);
 
                 if (result.wasDuplicate) {
                     setSaveStatus(SaveStatus.AlreadyExists);
@@ -1135,7 +1094,7 @@ export default function PopupApp() {
                                 tab.url,
                                 tab.title,
                                 [],
-                                tab.favIconUrl
+                                undefined
                             );
                             return result.post.id;
                         }
@@ -1772,7 +1731,7 @@ export default function PopupApp() {
                                                         tab.url,
                                                         tab.title,
                                                         [],
-                                                        tab.favIconUrl
+                                                        undefined
                                                     );
 
                                                     // Add to folder

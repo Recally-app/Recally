@@ -1,3 +1,4 @@
+import localSiteIcon from '../assets/icon/recally_icon.svg';
 import React, { useState, useEffect } from 'react';
 import type { Post } from '../../../shared';
 import dotsHorizontalIcon from '../assets/icon/3-dots-horizontal.svg';
@@ -38,50 +39,8 @@ function CompactPostItem({
         setNoteValue(post.notes || '');
     }, [post.notes]);
 
-    // Use stored favicon or fallback to Google's service
-    async function getFaviconUrl(): Promise<string> {
-        try {
-            if (post.favicon_url) return post.favicon_url;
-
-            const hostname = getHostname(post.url);
-            if (!hostname) {
-                return '';
-            }
-
-            const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
-
-            const res = await fetch(ddgUrl);
-            if (!res.ok) throw new Error(`favicon not found for ${hostname}`);
-
-            const blob = await res.blob();
-            return URL.createObjectURL(blob);
-        } catch (err) {
-            console.warn('Favicon fetch failed:', err);
-            return '';
-        }
-    }
-
-    const [faviconUrl, setFaviconUrl] = useState<string>('');
-
-    useEffect(() => {
-        let objectUrl: string | null = null;
-
-        (async () => {
-            const resolved = await getFaviconUrl();
-            setFaviconUrl(resolved);
-
-            if (resolved.startsWith('blob:')) {
-                objectUrl = resolved;
-            }
-        })();
-
-        return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
-        };
-    }, [post.url, post.favicon_url]);
+    // Bundled icons keep library rendering offline.
+    const faviconUrl = localSiteIcon;
 
     return (
         <li

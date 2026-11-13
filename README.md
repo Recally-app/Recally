@@ -207,3 +207,9 @@ npm run lint:fix
 - Use VS Code with the official ESLint extension installed.
 - Enable “Auto Fix on Save” to automatically apply lint fixes while you code.
 - Run npm run lint before committing changes to ensure code consistency.
+
+## Privacy
+
+Recally keeps its library locally and uses bundled site icons without external
+favicon requests. Read the [privacy policy](PRIVACY.md) and
+[store privacy declarations](docs/STORE_PRIVACY.md).
