@@ -175,10 +175,25 @@ Potential improvements for future versions:
 5. Import from browser bookmarks
 6. Sync across devices
 
-## Known Limitations
+## Import safety and conflicts
 
-1. Import preserves original IDs (may cause issues if importing same data multiple times in merge mode)
-2. No validation for duplicate data in merge mode
-3. Large datasets may take time to import
-4. No progress indicator for large imports
+The complete backup is validated before data changes. Posts, folders, and pins are
+written in one IndexedDB transaction; validation or write failures leave the
+existing collection intact. Missing referenced posts are rejected rather than
+silently discarded. Legacy embedded folder posts and pinned-post objects remain
+supported. Unknown backup versions are rejected.
 
+Merge keeps local post content when an imported original URL already exists.
+Folder memberships are combined for matching folder names, and local folder
+metadata wins. IDs that collide with unrelated local records are regenerated and
+all imported references are remapped. Existing pin order comes first, with at most
+five pins. Replace restores the backup, including existing duplicate URL records.
+
+Run the storage regression tests from `extension/` with `npm run test:storage`.
+The tests cover malformed input, missing references, rollback on write failure,
+merge conflicts, export/replace round trips, and legacy backups.
+
+## Known limitations
+
+- Merge deliberately preserves local edits; it does not combine conflicting notes.
+- Large imports do not yet show incremental progress.
