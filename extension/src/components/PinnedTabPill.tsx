@@ -1,3 +1,4 @@
+import localSiteIcon from '../assets/icon/recally_icon.svg';
 import React, { useState } from 'react';
 import { getHostname } from '../utils/urlUtils';
 
@@ -31,9 +32,8 @@ export default function PinnedTabPill({
     const hostname = getHostname(post.url);
     const website = hostname || 'unknown';
 
-    // Get favicon URL
-    const faviconUrl =
-        post.favicon_url || (hostname ? `https://icons.duckduckgo.com/ip3/${hostname}.ico` : '');
+    // Never load remote favicon metadata from saved or imported posts.
+    const faviconUrl = localSiteIcon;
 
     return (
         <div
