@@ -1,6 +1,6 @@
 import localSiteIcon from '../assets/icon/recally_icon.svg';
 import { getFaviconUrl } from '../utils/favicon';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import recallyIcon from '../assets/icon/recally_icon.svg';
 import searchIcon from '../assets/icon/search_icon.svg';
@@ -717,6 +717,7 @@ export default function PopupApp() {
     const [posts, setPosts] = useState<any[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.Idle);
     const [existingPostId, setExistingPostId] = useState<string | null>(null);
     const [tagEditModalOpen, setTagEditModalOpen] = useState<boolean>(false);
@@ -838,6 +839,7 @@ export default function PopupApp() {
 
     // Filter posts and folders based on search query
     useEffect(() => {
+        let cancelled = false;
         const performSearch = async () => {
             // Filter posts
             let filteredPostsResult = posts;
@@ -845,6 +847,8 @@ export default function PopupApp() {
             if (searchQuery.trim()) {
                 filteredPostsResult = await StorageManager.searchPosts(searchQuery);
             }
+
+            if (cancelled) return;
 
             // Apply sorting to posts
             const sortedPosts = [...filteredPostsResult].sort((a, b) => {
@@ -890,6 +894,9 @@ export default function PopupApp() {
         };
 
         performSearch();
+        return () => {
+            cancelled = true;
+        };
     }, [searchQuery, posts, folders, sortBy, sortReversed]);
 
     // Handle resize drag
@@ -1537,13 +1544,40 @@ export default function PopupApp() {
                         </span>
                         <input
                             type="text"
-                            placeholder="Search posts..."
+                            ref={searchInputRef}
+                            aria-label={viewMode === 'folder' ? 'Search folders' : 'Search posts'}
+                            placeholder={
+                                viewMode === 'folder' ? 'Search folders...' : 'Search posts...'
+                            }
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-[220px] p-1 pl-10 rounded-[19px] border border-[rgba(255,255,255,.25)] 
+                            className="w-[220px] p-1 pl-10 pr-8 rounded-[19px] border border-[rgba(255,255,255,.25)] 
                         bg-[rgba(0,0,0,.15)] text-[rgba(255,255,255,.8)] placeholder:text-[rgba(255,255,255,.5)] 
                         placeholder:opacity-50 focus:outline-none focus:ring-1 focus:ring-[rgba(255,255,255,.5)] focus:border-transparent text-[14px]"
                         />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                aria-label="Clear search"
+                                title="Clear search"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-white/80 hover:bg-white/10"
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    searchInputRef.current?.focus();
+                                }}
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    className="h-3 w-3"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <path d="M3 3l10 10M13 3L3 13" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
 
                     {/* Save Tab Button (List View) / Create Folder Button (Folder View) */}
