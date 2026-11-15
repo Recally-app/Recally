@@ -444,7 +444,7 @@ export const LocalStorageProvider: StorageProvider = {
         posts.forEach((post, index) => {
             if (post) {
                 orderedPosts.push(post);
-            } else {
+            } else if (ids[index] !== undefined) {
                 missingIds.push(ids[index]);
             }
         });

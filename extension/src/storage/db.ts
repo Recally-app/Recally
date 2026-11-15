@@ -51,7 +51,7 @@ export class RecallyDB extends Dexie {
                         if ('posts' in folder && Array.isArray(folder.posts)) {
                             postIds = folder.posts
                                 .map((p: { id?: string }) => p.id)
-                                .filter((id): id is string => Boolean(id));
+                                .filter((id: string | undefined): id is string => Boolean(id));
                         } else if ('post_ids' in folder && Array.isArray(folder.post_ids)) {
                             postIds = folder.post_ids;
                         }
