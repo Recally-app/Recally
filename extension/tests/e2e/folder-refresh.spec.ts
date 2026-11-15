@@ -70,11 +70,13 @@ for (const scenario of ['note', 'membership']) {
                     .locator('button')
                     .filter({ has: page.locator('img[alt="Note"]') });
                 await note.click();
-                await item.locator('textarea').fill('Saved note');
-                await item.getByRole('button', { name: 'Save', exact: true }).click();
-                await expect(item.locator('textarea')).toHaveCount(0);
+                await page.getByPlaceholder('Type your note here...').fill('Saved note');
+                await page.getByRole('button', { name: 'Save', exact: true }).click();
+                await expect(page.getByPlaceholder('Type your note here...')).toHaveCount(0);
                 await note.click();
-                await expect(item.locator('textarea')).toHaveValue('Saved note');
+                await expect(page.getByPlaceholder('Type your note here...')).toHaveValue(
+                    'Saved note'
+                );
             } else {
                 await page.evaluate(() => {
                     chrome.tabs.query = async () =>
