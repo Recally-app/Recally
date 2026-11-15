@@ -146,3 +146,23 @@ test('replace preserves duplicate URL records and caps pins without dangling ref
     expect(await db.posts.count()).toBe(7);
     expect(await db.pinned_tabs.count()).toBe(5);
 });
+
+test('replace preserves same-name folders and their metadata and memberships', async () => {
+    const other = post('other', 'https://example.com/other');
+    const first = { ...folder, id: 'one', color: '#111111', order: 1 };
+    const second = {
+        ...folder,
+        id: 'two',
+        name: ' reading ',
+        color: '#222222',
+        order: 2,
+        post_ids: ['other'],
+        updated_at: '2026-02-01T00:00:00.000Z',
+    };
+    await StorageManager.importData(backup([post(), other], [first, second]), 'replace');
+    expect(await db.folders.orderBy('order').toArray()).toEqual([first, second]);
+
+    const exported = await StorageManager.exportData();
+    await StorageManager.importData(exported, 'replace');
+    expect(await db.folders.orderBy('order').toArray()).toEqual([first, second]);
+});

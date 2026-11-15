@@ -544,10 +544,14 @@ export const LocalStorageProvider: StorageProvider = {
             const folderIds = new Set(folders.map((folder) => folder.id));
             for (const imported of data.folders) {
                 const ids = imported.post_ids.map(resolvePostId);
-                const existing = folders.find(
-                    (folder) =>
-                        folder.name.trim().toLowerCase() === imported.name.trim().toLowerCase()
-                );
+                const existing =
+                    mode === 'merge'
+                        ? folders.find(
+                              (folder) =>
+                                  folder.name.trim().toLowerCase() ===
+                                  imported.name.trim().toLowerCase()
+                          )
+                        : undefined;
                 if (existing) {
                     existing.post_ids = [...new Set([...existing.post_ids, ...ids])];
                     continue;

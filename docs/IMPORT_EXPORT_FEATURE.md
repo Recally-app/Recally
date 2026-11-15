@@ -187,7 +187,9 @@ Merge keeps local post content when an imported original URL already exists.
 Folder memberships are combined for matching folder names, and local folder
 metadata wins. IDs that collide with unrelated local records are regenerated and
 all imported references are remapped. Existing pin order comes first, with at most
-five pins. Replace restores the backup, including existing duplicate URL records.
+five pins. Replace restores the backup, including existing duplicate URL records and
+separate folders with matching names; each folder retains its ID, metadata,
+and memberships. Folder-name combining applies only to Merge.
 
 Run the storage regression tests from `extension/` with `npm run test:storage`.
 The tests cover malformed input, missing references, rollback on write failure,
