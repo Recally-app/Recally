@@ -12,7 +12,8 @@
         "test:e2e:headed": "npm run build && playwright test --headed",
         "dev": "vite",
         "build": "tsc && vite build",
-        "test:storage": "playwright test --config=playwright.storage.config.ts"
+        "test:storage": "playwright test --config=playwright.storage.config.ts",
+        "assets:store": "node scripts/store-assets.mjs"
     },
     "keywords": [],
     "author": "",
