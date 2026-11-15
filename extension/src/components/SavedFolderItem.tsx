@@ -1,3 +1,4 @@
+import { useFolderAddFeedback } from './useFolderAddFeedback';
 import React, { useState, useEffect } from 'react';
 import type { Folder, Post } from '../../../shared';
 import { StorageManager } from '../storage/storageManager';
@@ -16,7 +17,7 @@ interface SavedFolderItemProps {
     onEdit: () => void;
     onOpenAllTabs: () => void;
     onAddTab: () => void;
-    onAddCurrentTab: () => void;
+    onAddCurrentTab: () => Promise<'added' | 'already-added' | 'error'>;
     onRemoveTab: () => void;
     onChangeColor: () => void;
     onPostClick: (url: string) => void;
@@ -35,6 +36,7 @@ function SavedFolderItem({
     renderPostItem,
 }: SavedFolderItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { addStatus, addCurrentTab } = useFolderAddFeedback(onAddCurrentTab);
     const [posts, setPosts] = useState<Post[]>([]);
     const [isLoadingPosts, setIsLoadingPosts] = useState(false);
 
@@ -120,9 +122,11 @@ function SavedFolderItem({
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {/* Add Current Tab Button */}
                         <button
+                            disabled={addStatus === 'adding'}
+                            aria-label="Add current tab to folder"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onAddCurrentTab();
+                                void addCurrentTab();
                             }}
                             className="p-2 rounded-lg transition-all hover:bg-white/10 flex-shrink-0"
                             title="Add current tab to folder"
@@ -134,7 +138,7 @@ function SavedFolderItem({
                             />
                         </button>
 
-                        <Dropdown panelClassName="!w-[160px]">
+                        <Dropdown panelClassName="!w-[190px]">
                             <button
                                 onClick={onOpenAllTabs}
                                 className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 transition-colors hover:bg-white/10"
@@ -154,7 +158,7 @@ function SavedFolderItem({
                                 role="menuitem"
                             >
                                 <img src={addIcon} alt="Add Tab" className="w-[13px] h-[13px]" />
-                                Add Tab
+                                Add Tabs to Folder
                             </button>
 
                             <button
@@ -207,6 +211,22 @@ function SavedFolderItem({
                     </div>
                 </div>
 
+                <p
+                    role="status"
+                    aria-live="polite"
+                    className={addStatus === 'idle' ? 'sr-only' : 'px-3 pb-2 text-xs text-white/80'}
+                >
+                    {addStatus === 'adding'
+                        ? 'Adding current tab...'
+                        : addStatus === 'added'
+                          ? 'Current tab added to this folder.'
+                          : addStatus === 'already-added'
+                            ? 'Current tab is already in this folder.'
+                            : addStatus === 'error'
+                              ? 'Could not add the current tab.'
+                              : ''}
+                </p>
+
                 {/* Folder Contents - Expanded View */}
                 {isExpanded && (
                     <div className="folder-contents pr-3 py-2 pb-3 relative bg-[rgba(0,0,0,0)]">
@@ -226,7 +246,7 @@ function SavedFolderItem({
                                         onClick={onAddTab}
                                         className="mt-2 px-3 py-1 bg-[#26405e] text-white text-xs rounded hover:bg-[#3a6ca1] transition-colors"
                                     >
-                                        Add Tab
+                                        Add Tabs to Folder
                                     </button>
                                 </div>
                             ) : (

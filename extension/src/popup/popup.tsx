@@ -1734,7 +1734,7 @@ export default function PopupApp() {
                                                         console.error(
                                                             'Could not get current tab info'
                                                         );
-                                                        return;
+                                                        return 'error' as const;
                                                     }
 
                                                     // Save the post first (if not already saved)
@@ -1745,6 +1745,10 @@ export default function PopupApp() {
                                                         tab.favIconUrl
                                                     );
 
+                                                    const alreadyAdded = folder.post_ids.includes(
+                                                        result.post.id
+                                                    );
+
                                                     // Add to folder
                                                     await StorageManager.addPostToFolder(
                                                         folder.id,
@@ -1753,15 +1757,9 @@ export default function PopupApp() {
                                                     await fetchFolders();
                                                     await fetchPosts();
 
-                                                    /***  Show success notification
-                                            showConfirmModal({
-                                                type: 'success',
-                                                title: 'Tab Added',
-                                                message: `Added "${tab.title}" to "${folder.name}"`,
-                                                confirmText: 'OK',
-                                                onConfirm: closeConfirmModal,
-                                                autoCloseDelay: 2000,
-                                            });*/
+                                                    return alreadyAdded
+                                                        ? ('already-added' as const)
+                                                        : ('added' as const);
                                                 } catch (error) {
                                                     console.error(
                                                         'Failed to add current tab to folder:',
@@ -1775,6 +1773,7 @@ export default function PopupApp() {
                                                         confirmText: 'OK',
                                                         onConfirm: closeConfirmModal,
                                                     });
+                                                    return 'error' as const;
                                                 }
                                             }}
                                             onRemoveTab={() => {
