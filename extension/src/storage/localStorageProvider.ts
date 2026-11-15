@@ -71,35 +71,39 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async updatePostTags(id: string, tags: string[]): Promise<Post> {
-        const post = await db.posts.get(id);
-        if (!post) {
-            throw new Error(`Post with id ${id} not found`);
-        }
+        return db.transaction('rw', db.posts, async () => {
+            const post = await db.posts.get(id);
+            if (!post) {
+                throw new Error(`Post with id ${id} not found`);
+            }
 
-        const updatedPost: Post = {
-            ...post,
-            tags,
-            updated_at: new Date().toISOString(),
-        };
+            const updatedPost: Post = {
+                ...post,
+                tags,
+                updated_at: new Date().toISOString(),
+            };
 
-        await db.posts.put(updatedPost);
-        return updatedPost;
+            await db.posts.put(updatedPost);
+            return updatedPost;
+        });
     },
 
     async updatePostNotes(id: string, notes: string): Promise<Post> {
-        const post = await db.posts.get(id);
-        if (!post) {
-            throw new Error(`Post with id ${id} not found`);
-        }
+        return db.transaction('rw', db.posts, async () => {
+            const post = await db.posts.get(id);
+            if (!post) {
+                throw new Error(`Post with id ${id} not found`);
+            }
 
-        const updatedPost: Post = {
-            ...post,
-            notes,
-            updated_at: new Date().toISOString(),
-        };
+            const updatedPost: Post = {
+                ...post,
+                notes,
+                updated_at: new Date().toISOString(),
+            };
 
-        await db.posts.put(updatedPost);
-        return updatedPost;
+            await db.posts.put(updatedPost);
+            return updatedPost;
+        });
     },
 
     async getAllPosts(): Promise<Post[]> {
@@ -107,30 +111,34 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async deletePost(id: string): Promise<void> {
-        await db.pinned_tabs.delete(id);
-        await this.removePostFromAllFolders(id);
-        await db.posts.delete(id);
+        return db.transaction('rw', db.posts, db.folders, db.pinned_tabs, async () => {
+            await db.pinned_tabs.delete(id);
+            await this.removePostFromAllFolders(id);
+            await db.posts.delete(id);
+        });
     },
 
     async deleteAllPosts(): Promise<void> {
-        await db.posts.clear();
-        await db.pinned_tabs.clear();
-        const folders = await db.folders.toArray();
-        await Promise.all(
-            folders.map((folder) => {
-                if (folder.post_ids.length === 0) {
-                    return Promise.resolve();
-                }
+        return db.transaction('rw', db.posts, db.folders, db.pinned_tabs, async () => {
+            await db.posts.clear();
+            await db.pinned_tabs.clear();
+            const folders = await db.folders.toArray();
+            await Promise.all(
+                folders.map((folder) => {
+                    if (folder.post_ids.length === 0) {
+                        return Promise.resolve();
+                    }
 
-                const updatedFolder: Folder = {
-                    ...folder,
-                    post_ids: [],
-                    updated_at: new Date().toISOString(),
-                };
+                    const updatedFolder: Folder = {
+                        ...folder,
+                        post_ids: [],
+                        updated_at: new Date().toISOString(),
+                    };
 
-                return db.folders.put(updatedFolder);
-            })
-        );
+                    return db.folders.put(updatedFolder);
+                })
+            );
+        });
     },
 
     async searchPosts(query: string): Promise<Post[]> {
@@ -157,112 +165,121 @@ export const LocalStorageProvider: StorageProvider = {
         color: string,
         postIds: string[] = []
     ): Promise<SaveFolderResult> {
-        const trimmedName = name.trim();
+        return db.transaction('rw', db.posts, db.folders, async () => {
+            const trimmedName = name.trim();
 
-        if (!trimmedName) {
-            throw new Error('Folder name cannot be empty');
-        }
+            if (!trimmedName) {
+                throw new Error('Folder name cannot be empty');
+            }
 
-        const existingFolder = await db.folders.where('name').equalsIgnoreCase(trimmedName).first();
+            const existingFolder = await db.folders
+                .where('name')
+                .equalsIgnoreCase(trimmedName)
+                .first();
 
-        if (existingFolder) {
-            return {
-                folder: existingFolder,
-                wasDuplicate: true,
+            if (existingFolder) {
+                return {
+                    folder: existingFolder,
+                    wasDuplicate: true,
+                };
+            }
+
+            const uniquePostIds = Array.from(new Set(postIds));
+            const validPostIds = await Promise.all(
+                uniquePostIds.map(async (postId) => {
+                    const post = await db.posts.get(postId);
+                    return post ? postId : null;
+                })
+            );
+
+            const now = new Date().toISOString();
+            const folder: Folder = {
+                id: uuidv4(),
+                name: trimmedName,
+                color,
+                post_ids: validPostIds.filter((id): id is string => id !== null),
+                created_at: now,
+                updated_at: now,
+                order: Date.now(),
             };
-        }
 
-        const uniquePostIds = Array.from(new Set(postIds));
-        const validPostIds = await Promise.all(
-            uniquePostIds.map(async (postId) => {
-                const post = await db.posts.get(postId);
-                return post ? postId : null;
-            })
-        );
-
-        const now = new Date().toISOString();
-        const folder: Folder = {
-            id: uuidv4(),
-            name: trimmedName,
-            color,
-            post_ids: validPostIds.filter((id): id is string => id !== null),
-            created_at: now,
-            updated_at: now,
-            order: Date.now(),
-        };
-
-        await db.folders.put(folder);
-        return {
-            folder,
-            wasDuplicate: false,
-        };
+            await db.folders.put(folder);
+            return {
+                folder,
+                wasDuplicate: false,
+            };
+        });
     },
 
     async updateFolder(
         id: string,
         updates: Partial<Omit<Folder, 'id' | 'created_at'>>
     ): Promise<Folder> {
-        const folder = await db.folders.get(id);
-        if (!folder) {
-            throw new Error(`Folder with id ${id} not found`);
-        }
-
-        // If name is being updated, check for duplicates
-        if (updates.name && updates.name.trim() !== folder.name) {
-            const duplicate = await db.folders
-                .where('name')
-                .equalsIgnoreCase(updates.name.trim())
-                .first();
-
-            if (duplicate && duplicate.id !== id) {
-                throw new Error('A folder with this name already exists');
+        return db.transaction('rw', db.folders, async () => {
+            const folder = await db.folders.get(id);
+            if (!folder) {
+                throw new Error(`Folder with id ${id} not found`);
             }
-        }
 
-        const updatedFolder: Folder = {
-            ...folder,
-            ...updates,
-            name: updates.name?.trim() || folder.name,
-            updated_at: new Date().toISOString(),
-        };
+            // If name is being updated, check for duplicates
+            if (updates.name && updates.name.trim() !== folder.name) {
+                const duplicate = await db.folders
+                    .where('name')
+                    .equalsIgnoreCase(updates.name.trim())
+                    .first();
 
-        await db.folders.put(updatedFolder);
-        return updatedFolder;
+                if (duplicate && duplicate.id !== id) {
+                    throw new Error('A folder with this name already exists');
+                }
+            }
+
+            const updatedFolder: Folder = {
+                ...folder,
+                ...updates,
+                name: updates.name?.trim() || folder.name,
+                updated_at: new Date().toISOString(),
+            };
+
+            await db.folders.put(updatedFolder);
+            return updatedFolder;
+        });
     },
 
     async deleteFolder(id: string, deleteContainedPosts: boolean = false): Promise<void> {
-        const folder = await db.folders.get(id);
-        if (!folder) {
-            throw new Error(`Folder with id ${id} not found`);
-        }
+        return db.transaction('rw', db.posts, db.folders, db.pinned_tabs, async () => {
+            const folder = await db.folders.get(id);
+            if (!folder) {
+                throw new Error(`Folder with id ${id} not found`);
+            }
 
-        if (deleteContainedPosts && folder.post_ids.length > 0) {
-            const postIdSet = new Set(folder.post_ids);
-            const allFolders = await db.folders.toArray();
+            if (deleteContainedPosts && folder.post_ids.length > 0) {
+                const postIdSet = new Set(folder.post_ids);
+                const allFolders = await db.folders.toArray();
 
-            await Promise.all(
-                allFolders.map((existingFolder) => {
-                    if (!existingFolder.post_ids.some((postId) => postIdSet.has(postId))) {
-                        return Promise.resolve();
-                    }
+                await Promise.all(
+                    allFolders.map((existingFolder) => {
+                        if (!existingFolder.post_ids.some((postId) => postIdSet.has(postId))) {
+                            return Promise.resolve();
+                        }
 
-                    const updatedFolder: Folder = {
-                        ...existingFolder,
-                        post_ids: existingFolder.post_ids.filter(
-                            (postId) => !postIdSet.has(postId)
-                        ),
-                        updated_at: new Date().toISOString(),
-                    };
+                        const updatedFolder: Folder = {
+                            ...existingFolder,
+                            post_ids: existingFolder.post_ids.filter(
+                                (postId) => !postIdSet.has(postId)
+                            ),
+                            updated_at: new Date().toISOString(),
+                        };
 
-                    return db.folders.put(updatedFolder);
-                })
-            );
+                        return db.folders.put(updatedFolder);
+                    })
+                );
 
-            await Promise.all(folder.post_ids.map((postId) => db.posts.delete(postId)));
-            await db.pinned_tabs.bulkDelete(folder.post_ids);
-        }
+                await Promise.all(folder.post_ids.map((postId) => db.posts.delete(postId)));
+                await db.pinned_tabs.bulkDelete(folder.post_ids);
+            }
 
-        await db.folders.delete(id);
+            await db.folders.delete(id);
+        });
     },
 
     async getAllFolders(): Promise<Folder[]> {
@@ -272,44 +289,48 @@ export const LocalStorageProvider: StorageProvider = {
     // ==================== Folder-Post Operations ====================
 
     async addPostToFolder(folderId: string, postId: string): Promise<Folder> {
-        const folder = await db.folders.get(folderId);
-        if (!folder) {
-            throw new Error(`Folder with id ${folderId} not found`);
-        }
+        return db.transaction('rw', db.posts, db.folders, async () => {
+            const folder = await db.folders.get(folderId);
+            if (!folder) {
+                throw new Error(`Folder with id ${folderId} not found`);
+            }
 
-        const post = await db.posts.get(postId);
-        if (!post) {
-            throw new Error(`Post with id ${postId} not found`);
-        }
+            const post = await db.posts.get(postId);
+            if (!post) {
+                throw new Error(`Post with id ${postId} not found`);
+            }
 
-        if (folder.post_ids.includes(postId)) {
-            return folder;
-        }
+            if (folder.post_ids.includes(postId)) {
+                return folder;
+            }
 
-        const updatedFolder: Folder = {
-            ...folder,
-            post_ids: [...folder.post_ids, postId],
-            updated_at: new Date().toISOString(),
-        };
+            const updatedFolder: Folder = {
+                ...folder,
+                post_ids: [...folder.post_ids, postId],
+                updated_at: new Date().toISOString(),
+            };
 
-        await db.folders.put(updatedFolder);
-        return updatedFolder;
+            await db.folders.put(updatedFolder);
+            return updatedFolder;
+        });
     },
 
     async removePostFromFolder(folderId: string, postId: string): Promise<Folder> {
-        const folder = await db.folders.get(folderId);
-        if (!folder) {
-            throw new Error(`Folder with id ${folderId} not found`);
-        }
+        return db.transaction('rw', db.folders, async () => {
+            const folder = await db.folders.get(folderId);
+            if (!folder) {
+                throw new Error(`Folder with id ${folderId} not found`);
+            }
 
-        const updatedFolder: Folder = {
-            ...folder,
-            post_ids: folder.post_ids.filter((id) => id !== postId),
-            updated_at: new Date().toISOString(),
-        };
+            const updatedFolder: Folder = {
+                ...folder,
+                post_ids: folder.post_ids.filter((id) => id !== postId),
+                updated_at: new Date().toISOString(),
+            };
 
-        await db.folders.put(updatedFolder);
-        return updatedFolder;
+            await db.folders.put(updatedFolder);
+            return updatedFolder;
+        });
     },
 
     async getPostsByFolderId(folderId: string): Promise<Post[]> {
@@ -324,87 +345,102 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async removePostFromAllFolders(postId: string): Promise<void> {
-        const allFolders = await db.folders.toArray();
-        const foldersWithPost = allFolders.filter((folder) => folder.post_ids.includes(postId));
+        return db.transaction('rw', db.folders, async () => {
+            const allFolders = await db.folders.toArray();
+            const foldersWithPost = allFolders.filter((folder) => folder.post_ids.includes(postId));
 
-        await Promise.all(
-            foldersWithPost.map((folder) => this.removePostFromFolder(folder.id, postId))
-        );
+            await Promise.all(
+                foldersWithPost.map((folder) => this.removePostFromFolder(folder.id, postId))
+            );
+        });
     },
 
     // ==================== Pinned Tabs Operations ====================
 
     async getPinnedTabs(): Promise<Post[]> {
-        const rows = await db.pinned_tabs.orderBy('order').toArray();
-        if (rows.length === 0) {
-            return [];
-        }
-
-        const ids = rows.map((row) => row.post_id);
-        const posts = await db.posts.bulkGet(ids);
-        const missingIds: string[] = [];
-        const orderedPosts: Post[] = [];
-
-        posts.forEach((post, index) => {
-            if (post) {
-                orderedPosts.push(post);
-            } else if (ids[index] !== undefined) {
-                missingIds.push(ids[index]);
+        return db.transaction('rw', db.posts, db.pinned_tabs, async () => {
+            const rows = await db.pinned_tabs.orderBy('order').toArray();
+            if (rows.length === 0) {
+                return [];
             }
+
+            const ids = rows.map((row) => row.post_id);
+            const posts = await db.posts.bulkGet(ids);
+            const missingIds: string[] = [];
+            const orderedPosts: Post[] = [];
+
+            posts.forEach((post, index) => {
+                if (post) {
+                    orderedPosts.push(post);
+                } else if (ids[index] !== undefined) {
+                    missingIds.push(ids[index]);
+                }
+            });
+
+            if (missingIds.length > 0) {
+                await db.pinned_tabs.bulkDelete(missingIds);
+                await normalizePinnedOrder();
+            }
+
+            return orderedPosts;
         });
-
-        if (missingIds.length > 0) {
-            await db.pinned_tabs.bulkDelete(missingIds);
-            await normalizePinnedOrder();
-        }
-
-        return orderedPosts;
     },
 
     async pinTab(postId: string): Promise<boolean> {
-        const existing = await db.pinned_tabs.get(postId);
-        if (existing) {
+        return db.transaction('rw', db.posts, db.pinned_tabs, async () => {
+            const existing = await db.pinned_tabs.get(postId);
+            if (existing) {
+                return true;
+            }
+
+            const post = await db.posts.get(postId);
+            if (!post) {
+                return false;
+            }
+
+            const count = await db.pinned_tabs.count();
+            if (count >= 5) {
+                return false;
+            }
+
+            const last = await db.pinned_tabs.orderBy('order').last();
+            const nextOrder = last ? last.order + 1 : 0;
+
+            await db.pinned_tabs.put({ post_id: postId, order: nextOrder });
             return true;
-        }
-
-        const post = await db.posts.get(postId);
-        if (!post) {
-            return false;
-        }
-
-        const count = await db.pinned_tabs.count();
-        if (count >= 5) {
-            return false;
-        }
-
-        const last = await db.pinned_tabs.orderBy('order').last();
-        const nextOrder = last ? last.order + 1 : 0;
-
-        await db.pinned_tabs.put({ post_id: postId, order: nextOrder });
-        return true;
+        });
     },
 
     async unpinTab(postId: string): Promise<void> {
-        await db.pinned_tabs.delete(postId);
-        await normalizePinnedOrder();
+        return db.transaction('rw', db.pinned_tabs, async () => {
+            await db.pinned_tabs.delete(postId);
+            await normalizePinnedOrder();
+        });
     },
 
     async reorderPinnedTabs(newOrder: Post[]): Promise<void> {
-        const orderedIds = newOrder.map((post) => post.id);
-        const existing = await db.pinned_tabs.toArray();
-        const existingIds = existing.map((row) => row.post_id);
-        const idsToDelete = existingIds.filter((id) => !orderedIds.includes(id));
-
-        if (idsToDelete.length > 0) {
-            await db.pinned_tabs.bulkDelete(idsToDelete);
-        }
-
-        await db.pinned_tabs.bulkPut(
-            orderedIds.map((id, index) => ({
-                post_id: id,
-                order: index,
-            }))
-        );
+        return db.transaction('rw', db.posts, db.pinned_tabs, async () => {
+            if (newOrder.length === 0) {
+                await db.pinned_tabs.clear();
+                return;
+            }
+            const existing = await db.pinned_tabs.orderBy('order').toArray();
+            const liveIds = new Set(existing.map((pin) => pin.post_id));
+            const posts = await db.posts.bulkGet([...liveIds]);
+            const validIds = new Set(
+                posts.filter((post): post is Post => Boolean(post)).map((post) => post.id)
+            );
+            const orderedIds = [
+                ...new Set([
+                    ...newOrder.map((post) => post.id).filter((id) => liveIds.has(id)),
+                    ...existing.map((pin) => pin.post_id),
+                ]),
+            ]
+                .filter((id) => validIds.has(id))
+                .slice(0, 5);
+            await db.pinned_tabs.clear();
+            await db.pinned_tabs.bulkPut(orderedIds.map((post_id, order) => ({ post_id, order })));
+        });
     },
 
     async isPinned(postId: string): Promise<boolean> {
