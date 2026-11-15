@@ -1,5 +1,6 @@
 import type { Post } from '../models/post';
 import type { Folder } from '../models/folder';
+import type { BackupData } from '../models/backup';
 
 export interface SavePostResult {
     post: Post;
@@ -46,6 +47,7 @@ export interface StorageProvider {
     isPinned(postId: string): Promise<boolean>;
 
     // Import operations
+    importData(data: BackupData, mode: 'merge' | 'replace'): Promise<void>;
     importPost(post: Post): Promise<void>;
     importFolder(folder: Folder): Promise<void>;
 }

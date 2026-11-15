@@ -1,3 +1,4 @@
+import { parseBackup } from './backup';
 import { LocalStorageProvider } from './localStorageProvider';
 import type { StorageProvider } from '../../../shared/';
 import type { Post } from '../../../shared/';
@@ -101,106 +102,8 @@ export const StorageManager = {
     },
 
     async importData(jsonString: string, mode: 'merge' | 'replace'): Promise<void> {
-        try {
-            const importData = JSON.parse(jsonString);
-
-            // Validate the import data structure
-            if (!importData.data || !importData.data.posts || !importData.data.folders) {
-                throw new Error('Invalid import file format');
-            }
-
-            const { posts, folders, pinnedTabs = [] } = importData.data;
-
-            if (mode === 'replace') {
-                // Replace: Clear all existing data first
-                await this.deleteAllPosts();
-
-                // Clear all folders
-                const existingFolders = await this.getAllFolders();
-                for (const folder of existingFolders) {
-                    await this.deleteFolder(folder.id, false);
-                }
-
-                // Clear pinned tabs
-                await this.reorderPinnedTabs([]);
-            }
-
-            // Import posts first
-            for (const post of posts) {
-                await activeProvider.importPost(post);
-            }
-
-            // Import folders and validate post_ids reference existing posts
-            const allPostIds = new Set((await this.getAllPosts()).map((p) => p.id));
-            for (const folder of folders) {
-                // Handle backward compatibility: convert old 'posts' array to 'post_ids'
-                let postIds: string[] = [];
-                if ('post_ids' in folder && Array.isArray(folder.post_ids)) {
-                    postIds = folder.post_ids;
-                } else if ('posts' in folder && Array.isArray(folder.posts)) {
-                    // Old format: extract IDs from post objects
-                    postIds = (folder as { posts: { id?: string }[] }).posts
-                        .map((p) => p.id)
-                        .filter((id): id is string => Boolean(id));
-                }
-
-                // Filter out invalid post_ids that don't exist in posts table
-                const validPostIds = postIds.filter((id) => allPostIds.has(id));
-                await activeProvider.importFolder({
-                    ...folder,
-                    post_ids: validPostIds,
-                });
-            }
-
-            // Import pinned tabs (only valid post IDs)
-            const allPosts = await this.getAllPosts();
-            const validPostIds = new Set(allPosts.map((p) => p.id));
-
-            const normalizePinnedIds = (): string[] => {
-                if (!Array.isArray(pinnedTabs) || pinnedTabs.length === 0) {
-                    return [];
-                }
-
-                if (typeof pinnedTabs[0] === 'string') {
-                    return pinnedTabs as string[];
-                }
-
-                if (typeof pinnedTabs[0] === 'object') {
-                    return (pinnedTabs as Post[])
-                        .map((post) => post.id)
-                        .filter((id): id is string => Boolean(id));
-                }
-
-                return [];
-            };
-
-            const importedIds = normalizePinnedIds();
-            const postsById = new Map(allPosts.map((post) => [post.id, post]));
-            const toPosts = (ids: string[]) =>
-                ids.map((id) => postsById.get(id)).filter((post): post is Post => Boolean(post));
-
-            if (mode === 'merge') {
-                const existingPinnedIds = (await this.getPinnedTabs()).map((post) => post.id);
-                const seenIds = new Set<string>();
-                const combinedIds = [...existingPinnedIds, ...importedIds]
-                    .filter((id) => {
-                        if (!validPostIds.has(id) || seenIds.has(id)) {
-                            return false;
-                        }
-                        seenIds.add(id);
-                        return true;
-                    })
-                    .slice(0, 5);
-
-                await this.reorderPinnedTabs(toPosts(combinedIds));
-            } else {
-                const validPinnedIds = importedIds.filter((id) => validPostIds.has(id)).slice(0, 5);
-
-                await this.reorderPinnedTabs(toPosts(validPinnedIds));
-            }
-        } catch (error) {
-            console.error('Import failed:', error);
-            throw error;
-        }
+        if (mode !== 'merge' && mode !== 'replace') throw new Error('Invalid import mode');
+        const data = parseBackup(jsonString);
+        await activeProvider.importData(data, mode);
     },
 };
