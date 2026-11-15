@@ -11,7 +11,8 @@
         "test:e2e": "npm run build && playwright test",
         "test:e2e:headed": "npm run build && playwright test --headed",
         "dev": "vite",
-        "build": "tsc && vite build"
+        "build": "tsc && vite build",
+        "assets:store": "node scripts/store-assets.mjs"
     },
     "keywords": [],
     "author": "",
