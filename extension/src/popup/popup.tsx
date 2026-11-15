@@ -1551,7 +1551,7 @@ export default function PopupApp() {
                             }
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-[220px] p-1 pl-10 pr-8 rounded-[19px] border border-[rgba(255,255,255,.25)] 
+                            className="w-[220px] p-1 pl-10 pr-8 rounded-[19px] border border-[rgba(255,255,255,.25)]
                         bg-[rgba(0,0,0,.15)] text-[rgba(255,255,255,.8)] placeholder:text-[rgba(255,255,255,.5)] 
                         placeholder:opacity-50 focus:outline-none focus:ring-1 focus:ring-[rgba(255,255,255,.5)] focus:border-transparent text-[14px]"
                         />
