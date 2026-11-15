@@ -1710,6 +1710,7 @@ export default function PopupApp() {
                                         <SavedFolderItem
                                             key={folder.id}
                                             folder={folder}
+                                            allPosts={posts}
                                             onDelete={() => handleDeleteFolder(folder.id)}
                                             onEdit={() => {
                                                 setSelectedFolder(folder);
