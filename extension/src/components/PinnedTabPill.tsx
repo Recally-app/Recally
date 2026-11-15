@@ -74,7 +74,7 @@ export default function PinnedTabPill({
                     e.stopPropagation();
                     onClick();
                 }}
-                className="flex-1 text-[10px] text-white truncate text-left font-medium"
+                className="cursor-pointer flex-1 text-[10px] text-white truncate text-left font-medium"
             >
                 {post.title}
             </button>
@@ -86,7 +86,7 @@ export default function PinnedTabPill({
                         e.stopPropagation();
                         onRemove();
                     }}
-                    className="flex-shrink-0 ml-auto flex items-center justify-center 
+                    className="cursor-pointer flex-shrink-0 ml-auto flex items-center justify-center
                         transition-opacity duration-150 hover:opacity-70"
                     title="Unpin tab"
                 >
