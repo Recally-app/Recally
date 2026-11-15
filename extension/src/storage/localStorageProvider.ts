@@ -266,7 +266,10 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async getAllFolders(): Promise<Folder[]> {
-        return db.folders.orderBy('order').toArray();
+        // IndexedDB indexes omit records with missing keys. Older/imported
+        // folders may legitimately lack an order, so sort the complete table.
+        const folders = await db.folders.toArray();
+        return folders.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     },
 
     // ==================== Folder-Post Operations ====================
