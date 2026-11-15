@@ -1,6 +1,6 @@
 # Chrome Web Store privacy declarations
 
-Use these declarations for the local-only release after this PR is merged and
+Use these declarations for the release with a locally stored library after this PR is merged and
 the final package has been checked. The publisher must complete and certify the
 dashboard entries for the exact uploaded package.
 
@@ -19,13 +19,17 @@ Save, organize, and find web links selected by the user in a local browser libra
 
 Disclose saved website URLs and titles as browsing activity/website information,
 and notes and tags as user-provided content in the dashboard's applicable fields.
-Processing is local. No collection for advertising, analytics, resale, or transfer
+Library storage and search are local. No collection for advertising, analytics, resale, or transfer
 to a Recally backend is performed. Do not state that the extension handles no
 user data merely because storage is local.
 
-The packaged UI uses bundled icons, including for old imported records with
-external favicon URLs. It does not contact DuckDuckGo or saved websites to render
-the library. User-initiated opening of a saved link is an ordinary browser visit.
+The UI requests site icons from DuckDuckGo using saved website hostnames,
+including subdomains. Disclose this external transmission in the dashboard's
+applicable data-handling fields: DuckDuckGo receives the hostname and the user's
+IP address while handling requests. Full saved URL paths, queries, titles,
+notes, and tags are not included in icon requests. Images use no-referrer.
+Stored/imported favicon URLs are ignored; unavailable icons use a bundled fallback.
+User-initiated opening of a saved link is an ordinary browser visit.
 
 ## Public policy URL
 

@@ -1,4 +1,5 @@
 import localSiteIcon from '../assets/icon/recally_icon.svg';
+import { getFaviconUrl } from '../utils/favicon';
 import React, { useState, useEffect } from 'react';
 import logoSrc from '../assets/icon/recally-logo-primary.svg';
 import recallyIcon from '../assets/icon/recally_icon.svg';
@@ -56,8 +57,8 @@ function SavedPostItem({
         chrome.tabs.create({ url: post.url });
     };
 
-    // Bundled icons keep library rendering offline.
-    const faviconUrl = localSiteIcon;
+    // Use DuckDuckGo rather than arbitrary saved or imported favicon URLs.
+    const faviconUrl = getFaviconUrl(post.url);
 
     return (
         <li
@@ -90,9 +91,14 @@ function SavedPostItem({
                     {faviconUrl ? (
                         <img
                             src={faviconUrl}
+                            referrerPolicy="no-referrer"
                             alt={`${website} favicon`}
                             className="w-full h-full object-contain"
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                            onError={(e) => {
+                                if (e.currentTarget.src !== localSiteIcon) {
+                                    e.currentTarget.src = localSiteIcon;
+                                }
+                            }}
                         />
                     ) : (
                         <div className="w-full h-full rounded" />

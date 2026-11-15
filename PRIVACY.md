@@ -1,8 +1,8 @@
 # Recally privacy policy
 
-Last updated: November 12, 2026
+Last updated: November 15, 2026
 
-This policy describes the local-only Recally browser extension. Future account,
+This policy describes the Recally browser extension with a locally stored library. Future account,
 cloud-sync, or analytics features would require an updated policy and disclosures
 before they are enabled.
 
@@ -13,7 +13,8 @@ the relevant tab titles and URLs. It stores saved URLs, titles, tags, notes,
 timestamps, folder memberships, and pinned-tab choices in your browser's local
 IndexedDB storage. Display preferences are kept in local extension storage.
 Imported backups may also contain historical favicon URL metadata. Recally does
-not load those URLs or send them to an icon service.
+not load those stored favicon URLs. It derives icon requests from saved website
+hostnames instead, as described below.
 
 Recally does not continuously record browsing history. Reading open-tab titles
 and URLs supports actions you choose, such as saving a tab or saving all open
@@ -23,10 +24,17 @@ tabs into a folder.
 
 Recally uses this information to provide its save, organize, search, and recall
 features. This version has no Recally server, account system, analytics, or
-advertising SDK. The extension does not transmit your saved library, notes,
-tags, or browsing activity to us or third parties. Site icons displayed in the
-extension are bundled assets; opening your library makes no external favicon
-requests.
+advertising SDK. Recally does not upload your library, notes, or tags to a Recally server.
+
+To display site-specific icons in lists, folders, and pins, Recally requests
+favicons from DuckDuckGo at `https://icons.duckduckgo.com/ip3/<hostname>.ico`.
+Opening or browsing your library can trigger these requests. DuckDuckGo receives
+the saved website's hostname (including any subdomain) and your IP address while
+handling the request. Recally does not include the saved URL's path, query,
+fragment, title, notes, or tags in icon requests, and sets no-referrer on these
+images. These requests are subject to [DuckDuckGo's privacy policy](https://duckduckgo.com/privacy).
+Recally uses a bundled icon if a favicon cannot be loaded. It does not directly
+contact saved websites or arbitrary stored favicon URLs to render icons.
 
 Choosing to open a saved link navigates your browser to that website. That visit
 is subject to the website's own privacy practices and your browser settings.
@@ -48,7 +56,7 @@ read page bodies, passwords, cookies, or form contents.
 
 ## Storage, backups, and deletion
 
-Data stays in the browser profile where Recally is installed until you delete
+Your saved library stays in the browser profile where Recally is installed until you delete
 it or the browser removes extension data. Recally does not sync this data across
 devices. Local browser storage is not a substitute for a backup.
 

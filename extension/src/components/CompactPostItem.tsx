@@ -1,4 +1,5 @@
 import localSiteIcon from '../assets/icon/recally_icon.svg';
+import { getFaviconUrl } from '../utils/favicon';
 import React, { useState, useEffect } from 'react';
 import type { Post } from '../../../shared';
 import dotsHorizontalIcon from '../assets/icon/3-dots-horizontal.svg';
@@ -39,8 +40,8 @@ function CompactPostItem({
         setNoteValue(post.notes || '');
     }, [post.notes]);
 
-    // Bundled icons keep library rendering offline.
-    const faviconUrl = localSiteIcon;
+    // Use DuckDuckGo rather than arbitrary saved or imported favicon URLs.
+    const faviconUrl = getFaviconUrl(post.url);
 
     return (
         <li
@@ -70,9 +71,14 @@ function CompactPostItem({
                     {faviconUrl ? (
                         <img
                             src={faviconUrl}
+                            referrerPolicy="no-referrer"
                             alt={`${website} favicon`}
                             className="w-full h-full object-contain"
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                            onError={(e) => {
+                                if (e.currentTarget.src !== localSiteIcon) {
+                                    e.currentTarget.src = localSiteIcon;
+                                }
+                            }}
                         />
                     ) : (
                         <div className="w-full h-full rounded bg-[rgba(255,255,255,.1)]" />

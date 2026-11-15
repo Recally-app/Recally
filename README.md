@@ -210,6 +210,6 @@ npm run lint:fix
 
 ## Privacy
 
-Recally keeps its library locally and uses bundled site icons without external
-favicon requests. Read the [privacy policy](PRIVACY.md) and
+Recally keeps its library locally and loads site icons from DuckDuckGo using
+saved website hostnames, with bundled fallback icons. Read the [privacy policy](PRIVACY.md) and
 [store privacy declarations](docs/STORE_PRIVACY.md).
