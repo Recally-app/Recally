@@ -1,3 +1,5 @@
+import localSiteIcon from '../assets/icon/recally_icon.svg';
+import { getFaviconUrl } from '../utils/favicon';
 import React, { useState, useEffect } from 'react';
 import type { Post } from '../../../shared';
 import dotsHorizontalIcon from '../assets/icon/3-dots-horizontal.svg';
@@ -38,50 +40,8 @@ function CompactPostItem({
         setNoteValue(post.notes || '');
     }, [post.notes]);
 
-    // Use stored favicon or fallback to Google's service
-    async function getFaviconUrl(): Promise<string> {
-        try {
-            if (post.favicon_url) return post.favicon_url;
-
-            const hostname = getHostname(post.url);
-            if (!hostname) {
-                return '';
-            }
-
-            const ddgUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
-
-            const res = await fetch(ddgUrl);
-            if (!res.ok) throw new Error(`favicon not found for ${hostname}`);
-
-            const blob = await res.blob();
-            return URL.createObjectURL(blob);
-        } catch (err) {
-            console.warn('Favicon fetch failed:', err);
-            return '';
-        }
-    }
-
-    const [faviconUrl, setFaviconUrl] = useState<string>('');
-
-    useEffect(() => {
-        let objectUrl: string | null = null;
-
-        (async () => {
-            const resolved = await getFaviconUrl();
-            setFaviconUrl(resolved);
-
-            if (resolved.startsWith('blob:')) {
-                objectUrl = resolved;
-            }
-        })();
-
-        return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-                objectUrl = null;
-            }
-        };
-    }, [post.url, post.favicon_url]);
+    // Prefer the saved tab icon, with DuckDuckGo as the fallback.
+    const faviconUrl = getFaviconUrl(post.url, post.favicon_url);
 
     return (
         <li
@@ -111,9 +71,14 @@ function CompactPostItem({
                     {faviconUrl ? (
                         <img
                             src={faviconUrl}
+                            referrerPolicy="no-referrer"
                             alt={`${website} favicon`}
                             className="w-full h-full object-contain"
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                            onError={(e) => {
+                                if (e.currentTarget.src !== localSiteIcon) {
+                                    e.currentTarget.src = localSiteIcon;
+                                }
+                            }}
                         />
                     ) : (
                         <div className="w-full h-full rounded bg-[rgba(255,255,255,.1)]" />

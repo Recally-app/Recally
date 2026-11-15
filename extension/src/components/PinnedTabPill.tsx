@@ -1,3 +1,5 @@
+import localSiteIcon from '../assets/icon/recally_icon.svg';
+import { getFaviconUrl } from '../utils/favicon';
 import React, { useState } from 'react';
 import { getHostname } from '../utils/urlUtils';
 
@@ -31,9 +33,8 @@ export default function PinnedTabPill({
     const hostname = getHostname(post.url);
     const website = hostname || 'unknown';
 
-    // Get favicon URL
-    const faviconUrl =
-        post.favicon_url || (hostname ? `https://icons.duckduckgo.com/ip3/${hostname}.ico` : '');
+    // Prefer the saved tab icon, with DuckDuckGo as the fallback.
+    const faviconUrl = getFaviconUrl(post.url, post.favicon_url);
 
     return (
         <div
@@ -56,10 +57,13 @@ export default function PinnedTabPill({
             {faviconUrl && (
                 <img
                     src={faviconUrl}
+                    referrerPolicy="no-referrer"
                     alt={website}
                     className="w-3 h-3 flex-shrink-0 rounded-sm"
                     onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.src !== localSiteIcon) {
+                            e.currentTarget.src = localSiteIcon;
+                        }
                     }}
                 />
             )}
