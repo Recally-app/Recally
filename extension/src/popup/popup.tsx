@@ -270,9 +270,9 @@ function SavedPostItem({
 
 function EmptyState() {
     return (
-        <div className="mt-10 text-center text-[#26405e] opacity-70">
+        <div className="mt-10 text-center text-white/90">
             <p>No posts saved yet.</p>
-            <p>Click "Save Current Tab" to get started!</p>
+            <p className="mt-2 text-sm text-white/70">Click "Save Tab" to get started.</p>
         </div>
     );
 }
