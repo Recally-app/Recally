@@ -190,3 +190,31 @@ test('video duplicate matching keeps the original saved link intact', async () =
     expect(again.post.url).toBe(url);
     expect(await db.posts.count()).toBe(1);
 });
+
+test('empty fragments match absent fragments without rewriting stored URLs', async () => {
+    for (const enabled of [true, false]) {
+        for (const base of [
+            'https://example.com/page',
+            'https://example.com/',
+            'https://example.com/page?q=value',
+        ]) {
+            expect(canonicalizeUrl(base + '#', enabled)).toBe(canonicalizeUrl(base, enabled));
+            for (const fragment of ['#section', '#/dashboard', '#%23', '##']) {
+                expect(canonicalizeUrl(base + fragment, enabled)).toBe(base + fragment);
+            }
+        }
+    }
+    const url = 'https://example.com/page#';
+    const first = await LocalStorageProvider.savePost(url, 'Page');
+    const again = await LocalStorageProvider.savePost('https://example.com/page', 'Page again');
+    expect(again.wasDuplicate).toBe(true);
+    expect(again.post.id).toBe(first.post.id);
+    expect(again.post.url).toBe(url);
+    expect(await db.posts.count()).toBe(1);
+
+    await db.posts.clear();
+    await LocalStorageProvider.savePost('https://example.com/page', 'Page');
+    expect((await LocalStorageProvider.savePost(url, 'With empty fragment')).wasDuplicate).toBe(
+        true
+    );
+});

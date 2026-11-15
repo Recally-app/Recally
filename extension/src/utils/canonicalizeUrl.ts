@@ -48,7 +48,9 @@ export function canonicalizeUrl(url: string, removeTrackingParams = true): strin
         if (parsed.pathname !== '/' && parsed.pathname.endsWith('/')) {
             parsed.pathname = parsed.pathname.slice(0, -1);
         }
-        if (parsed.hash === '#') parsed.hash = '';
+        // URL.hash is empty for both an absent fragment and a trailing '#'.
+        // Setting it to empty removes the delimiter without touching real fragments.
+        if (parsed.hash === '') parsed.hash = '';
         return parsed.toString();
     } catch {
         return url.trim();

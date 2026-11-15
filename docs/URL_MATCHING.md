@@ -2,7 +2,9 @@
 
 Duplicate detection preserves parameters that can change page content, including
 `page`, `sort`, `filter`, `ref`, and `id`. Path case, HTTP versus HTTPS, and hash
-routes also remain distinct. Only UTM parameters and explicit advertising/campaign
+routes also remain distinct. An empty trailing `#` is ignored for matching, so
+`https://example.com/page` and `https://example.com/page#` are duplicates;
+non-empty fragments such as `#section` and `#/dashboard` remain distinct. Only UTM parameters and explicit advertising/campaign
 click IDs are removed when tracking-parameter removal is enabled. This includes
 `mc_cid`, `mc_eid`, `hsCtaTracking`, and `igshid` (case-insensitive).
 
