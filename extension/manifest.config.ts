@@ -29,5 +29,4 @@ export default defineManifest({
     },
 
     permissions: ['storage', 'tabs'],
-    host_permissions: ['<all_urls>'],
 });
