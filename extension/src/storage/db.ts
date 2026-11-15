@@ -65,64 +65,66 @@ export class RecallyDB extends Dexie {
                 }
             });
 
-        // Version 5: Add pinned tabs table, migrate from chrome.storage.local
-        this.version(5)
-            .stores({
-                posts: 'id, url, canonical_url, title, created_at, *tags',
-                folders: 'id, name, created_at, order, *post_ids',
-                pinned_tabs: 'post_id, order',
-            })
-            .upgrade(async (tx) => {
+        // Version 5 adds the table. Chrome storage reads must happen after the
+        // upgrade commits so IndexedDB cannot auto-commit while we await Chrome.
+        this.version(5).stores({
+            posts: 'id, url, canonical_url, title, created_at, *tags',
+            folders: 'id, name, created_at, order, *post_ids',
+            pinned_tabs: 'post_id, order',
+        });
+
+        // Run on every open, including profiles whose old v5 upgrade swallowed
+        // a migration failure. The legacy value is the retry marker.
+        this.on(
+            'ready',
+            async (readyDb) => {
+                const migrationDb = readyDb as RecallyDB;
+                if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
                 try {
-                    if (typeof chrome === 'undefined' || !chrome.storage?.local) {
-                        return;
-                    }
+                    const { pinnedTabs } = await chrome.storage.local.get(['pinnedTabs']);
+                    if (!Array.isArray(pinnedTabs) || pinnedTabs.length === 0) return;
+                    const legacyIds = pinnedTabs
+                        .map((value: unknown) =>
+                            typeof value === 'string'
+                                ? value
+                                : value && typeof value === 'object' && 'id' in value
+                                  ? value.id
+                                  : undefined
+                        )
+                        .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
-                    const pinnedIds = await new Promise<string[]>((resolve) => {
-                        chrome.storage.local.get(['pinnedTabs'], (result) => {
-                            const pinnedData = result.pinnedTabs || [];
-                            let ids: string[] = [];
-
-                            if (Array.isArray(pinnedData) && pinnedData.length > 0) {
-                                if (typeof pinnedData[0] === 'string') {
-                                    ids = pinnedData as string[];
-                                } else if (typeof pinnedData[0] === 'object') {
-                                    ids = (pinnedData as Post[])
-                                        .map((post) => post.id)
-                                        .filter((id): id is string => Boolean(id));
-                                }
-                            }
-
-                            resolve(ids);
-                        });
-                    });
-
-                    if (pinnedIds.length === 0) {
-                        return;
-                    }
-
-                    const posts = await tx.table('posts').toArray();
-                    const validPostIds = new Set(posts.map((post) => post.id));
-                    const uniqueIds = Array.from(new Set(pinnedIds)).filter((id) =>
-                        validPostIds.has(id)
+                    await migrationDb.transaction(
+                        'rw',
+                        migrationDb.posts,
+                        migrationDb.pinned_tabs,
+                        async () => {
+                            const posts = await migrationDb.posts.toArray();
+                            const validIds = new Set(posts.map((post) => post.id));
+                            const existing = await migrationDb.pinned_tabs
+                                .orderBy('order')
+                                .toArray();
+                            const ids = [
+                                ...new Set([...existing.map((row) => row.post_id), ...legacyIds]),
+                            ]
+                                .filter((id) => validIds.has(id))
+                                .slice(0, 5);
+                            await migrationDb.pinned_tabs.clear();
+                            await migrationDb.pinned_tabs.bulkPut(
+                                ids.map((post_id, order) => ({ post_id, order }))
+                            );
+                        }
                     );
-
-                    if (uniqueIds.length === 0) {
-                        return;
-                    }
-
-                    await tx.table('pinned_tabs').bulkPut(
-                        uniqueIds.map((id, index) => ({
-                            post_id: id,
-                            order: index,
-                        }))
-                    );
-
-                    chrome.storage.local.set({ pinnedTabs: [] });
+                    // Clear only after the transaction commits. Retrying after a storage
+                    // failure is safe because existing pins are deduplicated above.
+                    await chrome.storage.local.set({ pinnedTabs: [] });
                 } catch (error) {
-                    console.error('Migration error (v4->v5):', error);
+                    // Pins can retry on the next open; a recovery failure must
+                    // not make unrelated posts and folders inaccessible.
+                    console.warn('Legacy pin recovery will retry on next open:', error);
                 }
-            });
+            },
+            true
+        );
     }
 }
 
