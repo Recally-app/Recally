@@ -1,3 +1,4 @@
+import NoteEditor from '../components/NoteEditor';
 import localSiteIcon from '../assets/icon/recally_icon.svg';
 import { getFaviconUrl } from '../utils/favicon';
 import React, { useState, useEffect } from 'react';
@@ -46,7 +47,6 @@ function SavedPostItem({
 
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteValue, setNoteValue] = useState(post.notes || '');
-    const [isSaving, setIsSaving] = useState(false);
 
     // Sync noteValue when post.notes changes
     useEffect(() => {
@@ -151,7 +151,7 @@ function SavedPostItem({
                         )}
                         {/* Note Preview Tooltip (only show when NOT editing) */}
                         {!isEditingNote && (
-                            <div className="absolute top-full right-0 mt-2 w-[280px] p-2 bg-[#1a1a1a] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                            <div className="absolute top-full right-0 mt-2 w-[280px] p-2 bg-[#1a1a1a] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl hidden group-hover:block pointer-events-none z-50">
                                 <div className="flex items-center gap-2 mb-2">
                                     <img src={noteIcon} alt="Note" className="w-6 h-6" />
                                     <div className="flex-1 min-w-0 text-left">
@@ -177,61 +177,15 @@ function SavedPostItem({
                         )}
                     </button>
 
-                    {/* Note Editor Popup */}
                     {isEditingNote && (
-                        <>
-                            {/* Backdrop to close on click outside */}
-                            <div
-                                className="fixed inset-0 z-40 bg-black/50"
-                                onClick={() => setIsEditingNote(false)}
-                            />
-                            <div
-                                className="absolute top-full right-0 mt-2 p-2 bg-[#1a1a1a] border border-[rgba(255,255,255,.15)] rounded-lg shadow-xl z-50 w-[280px]"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="flex items-center gap-2 mb-3">
-                                    <img src={noteIcon} alt="Note" className="w-6 h-6" />
-                                    <div className="flex-1 min-w-0 text-left">
-                                        <p className="text-[12px] font-semibold text-white m-0 truncate">
-                                            {website}
-                                        </p>
-                                        <p className="text-[8px] text-[rgba(255,255,255,.2)] m-0 mr-20 truncate">
-                                            {post.url}
-                                        </p>
-                                    </div>
-                                </div>
-                                <hr className="mt-0 mb-3 mx-1 border-[1.2px] rounded-full border-[rgba(255,255,255,.1)] flex-shrink-0" />
-                                <textarea
-                                    value={noteValue}
-                                    onChange={(e) => setNoteValue(e.target.value)}
-                                    placeholder="Type your note here..."
-                                    className="w-full min-h-[120px] p-2 bg-[rgba(255,255,255,.05)] border border-[rgba(255,255,255,.1)] rounded text-white text-xs resize-none focus:outline-none focus:border-[rgba(255,255,255,.3)]"
-                                    autoFocus
-                                />
-                                <div className="flex gap-2 mt-3">
-                                    <button
-                                        onClick={async () => {
-                                            setIsSaving(true);
-                                            await onSaveNote(noteValue);
-                                            setIsSaving(false);
-                                            setIsEditingNote(false);
-                                        }}
-                                        disabled={isSaving}
-                                        className="rounded w-full bg-[linear-gradient(to_bottom_right,#146FCF,#0A3869)] px-4 py-2 text-xs text-white 
-                                        hover:bg-[linear-gradient(to_bottom_right,#146FCF,#146FCF)] transition-colors disabled:opacity-50"
-                                    >
-                                        {isSaving ? 'Saving...' : 'Save'}
-                                    </button>
-                                    <button
-                                        onClick={() => setIsEditingNote(false)}
-                                        disabled={isSaving}
-                                        className="px-3 py-2 bg-[rgba(255,255,255,.1)] text-white text-xs font-semibold rounded hover:bg-[#db2525] transition-colors disabled:opacity-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </>
+                        <NoteEditor
+                            title={post.title}
+                            url={post.url}
+                            value={noteValue}
+                            onChange={setNoteValue}
+                            onSave={onSaveNote}
+                            onClose={() => setIsEditingNote(false)}
+                        />
                     )}
                 </div>
 
@@ -1005,19 +959,8 @@ export default function PopupApp() {
     };
 
     const handleSaveNote = async (postId: string, noteText: string) => {
-        try {
-            await StorageManager.updatePostNotes(postId, noteText);
-            await fetchPosts();
-        } catch (error) {
-            console.error('Failed to update note:', error);
-            showConfirmModal({
-                type: 'error',
-                title: 'Update Failed',
-                message: 'Could not update note. Please try again.',
-                confirmText: 'OK',
-                onConfirm: closeConfirmModal,
-            });
-        }
+        await StorageManager.updatePostNotes(postId, noteText);
+        await fetchPosts();
     };
 
     const handleDeletePost = (postId: string) => {
