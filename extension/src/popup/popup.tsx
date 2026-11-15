@@ -542,18 +542,10 @@ function DeleteConfirmModal({
 /*------------------------------------------------------------------------------------------------------------------------------------- */
 function SettingsModal({
     onClose,
-    sortBy,
-    onSortByChange,
-    sortReversed,
-    onToggleReverse,
     onExport,
     onImport,
 }: {
     onClose: () => void;
-    sortBy: 'name' | 'date';
-    onSortByChange: (sortBy: 'name' | 'date') => void;
-    sortReversed: boolean;
-    onToggleReverse: () => void;
     onExport: () => void;
     onImport: (mode: 'merge' | 'replace') => void;
 }) {
@@ -569,59 +561,6 @@ function SettingsModal({
                 <div className="flex items-center gap-3 mb-4">
                     <img src={recallyIcon} alt="Settings" className="w-7 h-7" />
                     <h2 className="text-white text-[20px] font-bold">Settings</h2>
-                </div>
-
-                {/* Sort By Section */}
-                <div className="flex items-center gap-2 mb-4">
-                    <label className="text-white/60 text-base text-[14px] pr-1">Sort By:</label>
-                    <div
-                        className="flex items-center gap-2 bg-[rgba(255,255,255,.1)] rounded-full p-1 
-                    border border-[rgba(255,255,255,.15)] w-[240px] h-[38px]"
-                    >
-                        <button
-                            onClick={() => onSortByChange('name')}
-                            className={`px-4 py-1 rounded-full text-[13px] font-medium transition-all ${
-                                sortBy === 'name'
-                                    ? 'bg-[#2563EB] text-white'
-                                    : 'text-white/60 hover:text-white'
-                            }`}
-                        >
-                            Name
-                        </button>
-                        <button
-                            onClick={() => onSortByChange('date')}
-                            className={`px-4 py-1 rounded-full text-[12px] font-medium transition-all ${
-                                sortBy === 'date'
-                                    ? 'bg-[#2563EB] text-white'
-                                    : 'text-white/60 hover:text-white'
-                            }`}
-                        >
-                            Date Modified
-                        </button>
-                        <button
-                            onClick={onToggleReverse}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                                sortReversed
-                                    ? 'bg-[#DC2626] hover:bg-[#B91C1C]'
-                                    : 'bg-[#4B5563] hover:bg-[#6B7280]'
-                            }`}
-                            title={sortReversed ? 'Sort Ascending' : 'Sort Descending'}
-                        >
-                            <svg
-                                className={`w-4 h-4 text-white transition-transform ${sortReversed ? 'rotate-180' : ''}`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                        </button>
-                    </div>
                 </div>
 
                 {/* Data Section */}
@@ -781,6 +720,14 @@ export default function PopupApp() {
         [SaveStatus.Error]: 'Failed to save',
     };
 
+    const sortDirection =
+        sortBy === 'name'
+            ? sortReversed
+                ? 'Z to A'
+                : 'A to Z'
+            : sortReversed
+              ? 'Oldest first'
+              : 'Newest first';
     const buttonText = buttonTextMap[saveStatus];
     const isSaving = saveStatus === SaveStatus.Saving;
     const notIdle = saveStatus !== SaveStatus.Idle;
@@ -1635,6 +1582,37 @@ export default function PopupApp() {
                     </button>
                 </div>
 
+                <div
+                    className="mx-3 mb-2 flex shrink-0 items-center justify-between gap-2 text-xs text-white/80"
+                    role="group"
+                    aria-label="Sort controls"
+                >
+                    <label className="flex items-center gap-2">
+                        Sort by
+                        <select
+                            aria-label="Sort by"
+                            value={sortBy}
+                            onChange={(event) => {
+                                setSortBy(event.target.value as 'name' | 'date');
+                                setSortReversed(false);
+                            }}
+                            className="rounded border border-white/20 bg-[#1a1a1a] px-2 py-1 text-xs text-white"
+                        >
+                            <option value="date">Date modified</option>
+                            <option value="name">Name</option>
+                        </select>
+                    </label>
+                    <button
+                        type="button"
+                        aria-label={`Sort order: ${sortDirection}`}
+                        title="Toggle sort direction"
+                        onClick={() => setSortReversed((reversed) => !reversed)}
+                        className="rounded border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10"
+                    >
+                        {sortDirection}
+                    </button>
+                </div>
+
                 {/* Scrollable List Area Only */}
                 <div
                     className="scrollable-list flex-1 overflow-y-scroll overflow-x-hidden mx-3"
@@ -1882,10 +1860,6 @@ export default function PopupApp() {
                 {settingsModalOpen && (
                     <SettingsModal
                         onClose={() => setSettingsModalOpen(false)}
-                        sortBy={sortBy}
-                        onSortByChange={setSortBy}
-                        sortReversed={sortReversed}
-                        onToggleReverse={() => setSortReversed(!sortReversed)}
                         onExport={handleExportData}
                         onImport={handleImportData}
                     />
