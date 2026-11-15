@@ -23,12 +23,16 @@ Library storage and search are local. No collection for advertising, analytics, 
 to a Recally backend is performed. Do not state that the extension handles no
 user data merely because storage is local.
 
-The UI requests site icons from DuckDuckGo using saved website hostnames,
+The UI loads stored favicon URLs first, which can contact saved websites or
+other image providers, including providers specified in imported backups. The
+provider receives the favicon URL and the user’s IP address. When no favicon URL
+is stored, the UI requests site icons from DuckDuckGo using saved website hostnames,
 including subdomains. Disclose this external transmission in the dashboard's
 applicable data-handling fields: DuckDuckGo receives the hostname and the user's
 IP address while handling requests. Full saved URL paths, queries, titles,
-notes, and tags are not included in icon requests. Images use no-referrer.
-Stored/imported favicon URLs are ignored; unavailable icons use a bundled fallback.
+notes, and tags are not included in DuckDuckGo fallback requests. Images use no-referrer.
+Favicon URLs are captured when saving tabs and included in local library data.
+Unavailable icons use a bundled fallback.
 User-initiated opening of a saved link is an ordinary browser visit.
 
 ## Public policy URL

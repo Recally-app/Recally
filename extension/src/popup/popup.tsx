@@ -57,8 +57,8 @@ function SavedPostItem({
         chrome.tabs.create({ url: post.url });
     };
 
-    // Use DuckDuckGo rather than arbitrary saved or imported favicon URLs.
-    const faviconUrl = getFaviconUrl(post.url);
+    // Prefer the saved tab icon, with DuckDuckGo as the fallback.
+    const faviconUrl = getFaviconUrl(post.url, post.favicon_url);
 
     return (
         <li
@@ -930,7 +930,12 @@ export default function PopupApp() {
             setSaveStatus(SaveStatus.Error);
         } else {
             try {
-                const result = await StorageManager.savePost(tab.url, tab.title);
+                const result = await StorageManager.savePost(
+                    tab.url,
+                    tab.title,
+                    [],
+                    tab.favIconUrl
+                );
 
                 if (result.wasDuplicate) {
                     setSaveStatus(SaveStatus.AlreadyExists);
@@ -1100,7 +1105,7 @@ export default function PopupApp() {
                                 tab.url,
                                 tab.title,
                                 [],
-                                undefined
+                                tab.favIconUrl
                             );
                             return result.post.id;
                         }
@@ -1737,7 +1742,7 @@ export default function PopupApp() {
                                                         tab.url,
                                                         tab.title,
                                                         [],
-                                                        undefined
+                                                        tab.favIconUrl
                                                     );
 
                                                     // Add to folder

@@ -9,12 +9,11 @@ before they are enabled.
 ## Information handled
 
 When you choose to save a tab or capture open tabs into a folder, Recally reads
-the relevant tab titles and URLs. It stores saved URLs, titles, tags, notes,
+the relevant tab titles, URLs, and available favicon URLs. It stores saved URLs, titles, tags, notes,
 timestamps, folder memberships, and pinned-tab choices in your browser's local
 IndexedDB storage. Display preferences are kept in local extension storage.
-Imported backups may also contain historical favicon URL metadata. Recally does
-not load those stored favicon URLs. It derives icon requests from saved website
-hostnames instead, as described below.
+Favicon URLs are also stored when available and may be included in imported
+backups. Recally loads these URLs to display site icons, as described below.
 
 Recally does not continuously record browsing history. Reading open-tab titles
 and URLs supports actions you choose, such as saving a tab or saving all open
@@ -26,15 +25,21 @@ Recally uses this information to provide its save, organize, search, and recall
 features. This version has no Recally server, account system, analytics, or
 advertising SDK. Recally does not upload your library, notes, or tags to a Recally server.
 
-To display site-specific icons in lists, folders, and pins, Recally requests
-favicons from DuckDuckGo at `https://icons.duckduckgo.com/ip3/<hostname>.ico`.
+To display site-specific icons in lists, folders, and pins, Recally first uses
+the stored favicon URL, when present. This can contact the saved website or
+another image provider, including a provider specified in an imported backup.
+That provider receives the requested favicon URL and your IP address while
+handling the request; its own privacy practices apply.
+
+When no favicon URL is stored, Recally requests favicons from DuckDuckGo at `https://icons.duckduckgo.com/ip3/<hostname>.ico`.
 Opening or browsing your library can trigger these requests. DuckDuckGo receives
 the saved website's hostname (including any subdomain) and your IP address while
 handling the request. Recally does not include the saved URL's path, query,
-fragment, title, notes, or tags in icon requests, and sets no-referrer on these
+fragment, title, notes, or tags in DuckDuckGo fallback requests, and sets no-referrer on these
 images. These requests are subject to [DuckDuckGo's privacy policy](https://duckduckgo.com/privacy).
-Recally uses a bundled icon if a favicon cannot be loaded. It does not directly
-contact saved websites or arbitrary stored favicon URLs to render icons.
+All favicon images use no-referrer. Recally uses a bundled icon if a favicon
+cannot be loaded. Only import backups you trust, as their favicon URLs can
+trigger requests when displayed.
 
 Choosing to open a saved link navigates your browser to that website. That visit
 is subject to the website's own privacy practices and your browser settings.

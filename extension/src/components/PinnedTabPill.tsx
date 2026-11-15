@@ -33,8 +33,8 @@ export default function PinnedTabPill({
     const hostname = getHostname(post.url);
     const website = hostname || 'unknown';
 
-    // Use DuckDuckGo rather than arbitrary saved or imported favicon URLs.
-    const faviconUrl = getFaviconUrl(post.url);
+    // Prefer the saved tab icon, with DuckDuckGo as the fallback.
+    const faviconUrl = getFaviconUrl(post.url, post.favicon_url);
 
     return (
         <div

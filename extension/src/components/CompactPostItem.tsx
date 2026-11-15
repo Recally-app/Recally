@@ -40,8 +40,8 @@ function CompactPostItem({
         setNoteValue(post.notes || '');
     }, [post.notes]);
 
-    // Use DuckDuckGo rather than arbitrary saved or imported favicon URLs.
-    const faviconUrl = getFaviconUrl(post.url);
+    // Prefer the saved tab icon, with DuckDuckGo as the fallback.
+    const faviconUrl = getFaviconUrl(post.url, post.favicon_url);
 
     return (
         <li
