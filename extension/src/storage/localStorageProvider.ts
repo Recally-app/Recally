@@ -134,19 +134,20 @@ export const LocalStorageProvider: StorageProvider = {
     },
 
     async searchPosts(query: string): Promise<Post[]> {
-        const q = query.toLowerCase();
+        const q = query.trim().toLowerCase();
         const preferences = await getUserPreferences();
         const all = await db.posts.toArray();
 
         return all.filter((p) => {
             // Always search title and tags
             const titleMatch = p.title.toLowerCase().includes(q);
+            const tagMatch = p.tags.some((tag) => tag.toLowerCase().includes(q));
 
             // Use URL or canonical URL based on preference
             const urlToSearch = preferences.removeTrackingParams ? canonicalizeUrl(p.url) : p.url;
             const urlMatch = urlToSearch.toLowerCase().includes(q);
 
-            return titleMatch || urlMatch;
+            return titleMatch || tagMatch || urlMatch;
         });
     },
 
