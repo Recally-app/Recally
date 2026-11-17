@@ -11,6 +11,7 @@ export class RecallyDB extends Dexie {
     posts!: Table<Post>;
     folders!: Table<Folder>;
     pinned_tabs!: Table<PinnedTabRow>;
+    migrations!: Table<{ id: string }>;
 
     constructor() {
         super('recally_db');
@@ -73,8 +74,12 @@ export class RecallyDB extends Dexie {
             pinned_tabs: 'post_id, order',
         });
 
+        // A durable marker prevents a cleanup retry (or another popup) from
+        // replaying recovered pins after the user has subsequently changed them.
+        this.version(6).stores({ migrations: 'id' });
+
         // Run on every open, including profiles whose old v5 upgrade swallowed
-        // a migration failure. The legacy value is the retry marker.
+        // a migration failure. A pending legacy value triggers recovery or cleanup.
         this.on(
             'ready',
             async (readyDb) => {
@@ -97,7 +102,9 @@ export class RecallyDB extends Dexie {
                         'rw',
                         migrationDb.posts,
                         migrationDb.pinned_tabs,
+                        migrationDb.migrations,
                         async () => {
+                            if (await migrationDb.migrations.get('legacy-pins')) return;
                             const posts = await migrationDb.posts.toArray();
                             const validIds = new Set(posts.map((post) => post.id));
                             const existing = await migrationDb.pinned_tabs
@@ -112,10 +119,11 @@ export class RecallyDB extends Dexie {
                             await migrationDb.pinned_tabs.bulkPut(
                                 ids.map((post_id, order) => ({ post_id, order }))
                             );
+                            await migrationDb.migrations.put({ id: 'legacy-pins' });
                         }
                     );
                     // Clear only after the transaction commits. Retrying after a storage
-                    // failure is safe because existing pins are deduplicated above.
+                    // failure retries cleanup only once the completion marker exists.
                     await chrome.storage.local.set({ pinnedTabs: [] });
                 } catch (error) {
                     // Pins can retry on the next open; a recovery failure must

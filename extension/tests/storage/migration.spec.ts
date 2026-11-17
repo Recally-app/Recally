@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { test, expect } from '@playwright/test';
 import Dexie from 'dexie';
-import { db } from '../../src/storage/db';
+import { db, RecallyDB } from '../../src/storage/db';
 
 const time = '2026-01-01T00:00:00.000Z';
 const post = (id: string) => ({
@@ -122,6 +122,7 @@ test('pin write failure rolls back existing pins and preserves the legacy retry 
         expect(await db.posts.count()).toBe(7);
         expect(await db.pinned_tabs.toArray()).toEqual([{ post_id: '6', order: 0 }]);
         expect(legacy).toEqual(['one']);
+        expect(await db.migrations.get('legacy-pins')).toBeUndefined();
     } finally {
         db.pinned_tabs.hook('creating').unsubscribe(fail);
     }
@@ -132,4 +133,31 @@ test('pin write failure rolls back existing pins and preserves the legacy retry 
         'one',
     ]);
     expect(legacy).toEqual([]);
+});
+
+test('cleanup retries do not restore a pin the user subsequently removed', async () => {
+    await seed(5);
+    failClear = true;
+    await db.open();
+    expect(await db.migrations.get('legacy-pins')).toBeDefined();
+    await db.pinned_tabs.delete('one');
+    db.close();
+    failClear = false;
+    await db.open();
+    expect(await db.pinned_tabs.count()).toBe(0);
+    expect(legacy).toEqual([]);
+});
+
+test('another popup cannot replay a completed migration with a stale legacy key', async () => {
+    await seed(5);
+    failClear = true;
+    await db.open();
+    await db.pinned_tabs.delete('one');
+    const peer = new RecallyDB();
+    try {
+        await peer.open();
+        expect(await peer.pinned_tabs.count()).toBe(0);
+    } finally {
+        peer.close();
+    }
 });
