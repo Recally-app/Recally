@@ -1710,6 +1710,7 @@ export default function PopupApp() {
                                         <SavedFolderItem
                                             key={folder.id}
                                             folder={folder}
+                                            allPosts={posts}
                                             onDelete={() => handleDeleteFolder(folder.id)}
                                             onEdit={() => {
                                                 setSelectedFolder(folder);
@@ -1730,11 +1731,14 @@ export default function PopupApp() {
                                                         active: true,
                                                         currentWindow: true,
                                                     });
-                                                    if (!tab?.url || !tab?.title) {
-                                                        console.error(
-                                                            'Could not get current tab info'
+                                                    if (
+                                                        !tab?.url ||
+                                                        !tab?.title ||
+                                                        !isSupportedUrl(tab.url)
+                                                    ) {
+                                                        throw new Error(
+                                                            'Only HTTP and HTTPS tabs can be saved.'
                                                         );
-                                                        return;
                                                     }
 
                                                     // Save the post first (if not already saved)
@@ -1745,6 +1749,10 @@ export default function PopupApp() {
                                                         tab.favIconUrl
                                                     );
 
+                                                    const alreadyAdded = folder.post_ids.includes(
+                                                        result.post.id
+                                                    );
+
                                                     // Add to folder
                                                     await StorageManager.addPostToFolder(
                                                         folder.id,
@@ -1753,15 +1761,9 @@ export default function PopupApp() {
                                                     await fetchFolders();
                                                     await fetchPosts();
 
-                                                    /***  Show success notification
-                                            showConfirmModal({
-                                                type: 'success',
-                                                title: 'Tab Added',
-                                                message: `Added "${tab.title}" to "${folder.name}"`,
-                                                confirmText: 'OK',
-                                                onConfirm: closeConfirmModal,
-                                                autoCloseDelay: 2000,
-                                            });*/
+                                                    return alreadyAdded
+                                                        ? ('already-added' as const)
+                                                        : ('added' as const);
                                                 } catch (error) {
                                                     console.error(
                                                         'Failed to add current tab to folder:',
@@ -1775,6 +1777,7 @@ export default function PopupApp() {
                                                         confirmText: 'OK',
                                                         onConfirm: closeConfirmModal,
                                                     });
+                                                    return 'error' as const;
                                                 }
                                             }}
                                             onRemoveTab={() => {

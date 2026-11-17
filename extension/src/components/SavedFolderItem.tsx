@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { Folder, Post } from '../../../shared';
-import { StorageManager } from '../storage/storageManager';
 import { adjustBrightness } from '../utils/colorUtils';
 import { FolderIcon } from './FolderIcon';
 import editIcon from '../assets/icon/edit-icon.svg';
@@ -9,14 +8,16 @@ import openIcon from '../assets/icon/open-icon.svg';
 import addIcon from '../assets/icon/add-icon.svg';
 import removeIcon from '../assets/icon/remove-icon.svg';
 import Dropdown from './dropdown';
+import { useFolderAddFeedback } from './useFolderAddFeedback';
 
 interface SavedFolderItemProps {
     folder: Folder;
+    allPosts: Post[];
     onDelete: () => void;
     onEdit: () => void;
     onOpenAllTabs: () => void;
     onAddTab: () => void;
-    onAddCurrentTab: () => void;
+    onAddCurrentTab: () => Promise<'added' | 'already-added' | 'error'>;
     onRemoveTab: () => void;
     onChangeColor: () => void;
     onPostClick: (url: string) => void;
@@ -25,6 +26,7 @@ interface SavedFolderItemProps {
 
 function SavedFolderItem({
     folder,
+    allPosts,
     onDelete,
     onEdit,
     onOpenAllTabs,
@@ -34,22 +36,14 @@ function SavedFolderItem({
     onChangeColor,
     renderPostItem,
 }: SavedFolderItemProps) {
+    const { addStatus, addCurrentTab } = useFolderAddFeedback(onAddCurrentTab);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-
-    useEffect(() => {
-        if (isExpanded) {
-            setIsLoadingPosts(true);
-            StorageManager.getPostsByFolderId(folder.id)
-                .then(setPosts)
-                .catch((err) => {
-                    console.error('Failed to load folder posts:', err);
-                    setPosts([]);
-                })
-                .finally(() => setIsLoadingPosts(false));
-        }
-    }, [isExpanded, folder.id]);
+    // Derive contents from the same current records used by the list view.
+    // Local snapshots otherwise hide successful note/tag and membership edits.
+    const postsById = new Map(allPosts.map((post) => [post.id, post]));
+    const posts = folder.post_ids
+        .map((id) => postsById.get(id))
+        .filter((post): post is Post => Boolean(post));
 
     const toggleExpanded = () => {
         setIsExpanded(!isExpanded);
@@ -120,9 +114,11 @@ function SavedFolderItem({
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {/* Add Current Tab Button */}
                         <button
+                            disabled={addStatus === 'adding'}
+                            aria-label="Add current tab to folder"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                onAddCurrentTab();
+                                void addCurrentTab();
                             }}
                             className="p-2 rounded-lg transition-all hover:bg-white/10 flex-shrink-0"
                             title="Add current tab to folder"
@@ -134,7 +130,7 @@ function SavedFolderItem({
                             />
                         </button>
 
-                        <Dropdown panelClassName="!w-[160px]">
+                        <Dropdown panelClassName="!w-[190px]">
                             <button
                                 onClick={onOpenAllTabs}
                                 className="block w-full px-4 py-2 text-left text-[14px] flex items-center gap-2 transition-colors hover:bg-white/10"
@@ -154,7 +150,7 @@ function SavedFolderItem({
                                 role="menuitem"
                             >
                                 <img src={addIcon} alt="Add Tab" className="w-[13px] h-[13px]" />
-                                Add Tab
+                                Add Tabs to Folder
                             </button>
 
                             <button
@@ -207,6 +203,22 @@ function SavedFolderItem({
                     </div>
                 </div>
 
+                <p
+                    role="status"
+                    aria-live="polite"
+                    className={addStatus === 'idle' ? 'sr-only' : 'px-3 pb-2 text-xs text-white/80'}
+                >
+                    {addStatus === 'adding'
+                        ? 'Adding current tab...'
+                        : addStatus === 'added'
+                          ? 'Current tab added to this folder.'
+                          : addStatus === 'already-added'
+                            ? 'Current tab is already in this folder.'
+                            : addStatus === 'error'
+                              ? 'Could not add the current tab.'
+                              : ''}
+                </p>
+
                 {/* Folder Contents - Expanded View */}
                 {isExpanded && (
                     <div className="folder-contents pr-3 py-2 pb-3 relative bg-[rgba(0,0,0,0)]">
@@ -226,7 +238,7 @@ function SavedFolderItem({
                                         onClick={onAddTab}
                                         className="mt-2 px-3 py-1 bg-[#26405e] text-white text-xs rounded hover:bg-[#3a6ca1] transition-colors"
                                     >
-                                        Add Tab
+                                        Add Tabs to Folder
                                     </button>
                                 </div>
                             ) : (
