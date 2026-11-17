@@ -713,7 +713,7 @@ export default function PopupApp() {
     };
 
     const buttonTextMap: Record<SaveStatus, string> = {
-        [SaveStatus.Idle]: 'Save Current Tab',
+        [SaveStatus.Idle]: 'Save Tab',
         [SaveStatus.Saving]: 'Saving...',
         [SaveStatus.Success]: 'Saved!',
         [SaveStatus.AlreadyExists]: 'Already saved!',
@@ -1503,8 +1503,10 @@ export default function PopupApp() {
                         text-[14px] font-regular"
                             onClick={handleSaveClick}
                             disabled={notIdle}
+                            aria-label="Save Tab"
+                            title={buttonText}
                         >
-                            Save Tab
+                            {buttonText}
                         </button>
                     ) : (
                         <button
@@ -1582,6 +1584,9 @@ export default function PopupApp() {
                     </button>
                 </div>
 
+                <span role="status" aria-live="polite" className="sr-only">
+                    {saveStatus === SaveStatus.Idle ? '' : buttonText}
+                </span>
                 <div
                     className="mx-3 mb-2 flex shrink-0 items-center justify-between gap-2 text-xs text-white/80"
                     role="group"
