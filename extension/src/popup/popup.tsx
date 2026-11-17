@@ -1731,11 +1731,14 @@ export default function PopupApp() {
                                                         active: true,
                                                         currentWindow: true,
                                                     });
-                                                    if (!tab?.url || !tab?.title) {
-                                                        console.error(
-                                                            'Could not get current tab info'
+                                                    if (
+                                                        !tab?.url ||
+                                                        !tab?.title ||
+                                                        !isSupportedUrl(tab.url)
+                                                    ) {
+                                                        throw new Error(
+                                                            'Only HTTP and HTTPS tabs can be saved.'
                                                         );
-                                                        return 'error' as const;
                                                     }
 
                                                     // Save the post first (if not already saved)

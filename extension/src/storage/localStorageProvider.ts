@@ -3,6 +3,7 @@ import type { Post, Folder } from '../../../shared';
 import type { StorageProvider, SavePostResult, SaveFolderResult } from '../../../shared/';
 import { v4 as uuidv4 } from 'uuid';
 import { getUserPreferences } from './userPreferences';
+import { isSupportedUrl } from '../utils/urlUtils';
 import { canonicalizeUrl } from '../utils/canonicalizeUrl';
 
 async function normalizePinnedOrder(): Promise<void> {
@@ -27,6 +28,9 @@ export const LocalStorageProvider: StorageProvider = {
         tags: string[] = [],
         faviconUrl?: string
     ): Promise<SavePostResult> {
+        if (!isSupportedUrl(url)) {
+            throw new Error('Only HTTP and HTTPS tabs can be saved.');
+        }
         const preferences = await getUserPreferences();
         const canonicalUrl = canonicalizeUrl(url, preferences.removeTrackingParams);
         const now = new Date().toISOString();
