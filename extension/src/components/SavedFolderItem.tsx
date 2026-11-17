@@ -1,7 +1,5 @@
-import { useFolderAddFeedback } from './useFolderAddFeedback';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { Folder, Post } from '../../../shared';
-import { StorageManager } from '../storage/storageManager';
 import { adjustBrightness } from '../utils/colorUtils';
 import { FolderIcon } from './FolderIcon';
 import editIcon from '../assets/icon/edit-icon.svg';
@@ -10,9 +8,11 @@ import openIcon from '../assets/icon/open-icon.svg';
 import addIcon from '../assets/icon/add-icon.svg';
 import removeIcon from '../assets/icon/remove-icon.svg';
 import Dropdown from './dropdown';
+import { useFolderAddFeedback } from './useFolderAddFeedback';
 
 interface SavedFolderItemProps {
     folder: Folder;
+    allPosts: Post[];
     onDelete: () => void;
     onEdit: () => void;
     onOpenAllTabs: () => void;
@@ -26,6 +26,7 @@ interface SavedFolderItemProps {
 
 function SavedFolderItem({
     folder,
+    allPosts,
     onDelete,
     onEdit,
     onOpenAllTabs,
@@ -35,23 +36,14 @@ function SavedFolderItem({
     onChangeColor,
     renderPostItem,
 }: SavedFolderItemProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
     const { addStatus, addCurrentTab } = useFolderAddFeedback(onAddCurrentTab);
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [isLoadingPosts, setIsLoadingPosts] = useState(false);
-
-    useEffect(() => {
-        if (isExpanded) {
-            setIsLoadingPosts(true);
-            StorageManager.getPostsByFolderId(folder.id)
-                .then(setPosts)
-                .catch((err) => {
-                    console.error('Failed to load folder posts:', err);
-                    setPosts([]);
-                })
-                .finally(() => setIsLoadingPosts(false));
-        }
-    }, [isExpanded, folder.id]);
+    const [isExpanded, setIsExpanded] = useState(false);
+    // Derive contents from the same current records used by the list view.
+    // Local snapshots otherwise hide successful note/tag and membership edits.
+    const postsById = new Map(allPosts.map((post) => [post.id, post]));
+    const posts = folder.post_ids
+        .map((id) => postsById.get(id))
+        .filter((post): post is Post => Boolean(post));
 
     const toggleExpanded = () => {
         setIsExpanded(!isExpanded);
